@@ -1,0 +1,187 @@
+{
+  "scenarios": [
+    {
+      "name": "Ordinary English text routes to the English checkpoint",
+      "testMappings": [
+        {
+          "file": "tests/router.rs",
+          "lines": "14-25",
+          "implMappings": [
+            {
+              "file": "src/router.rs",
+              "lines": [
+                79,
+                80,
+                81,
+                82,
+                83,
+                84,
+                85,
+                86,
+                87,
+                88,
+                89,
+                90,
+                91,
+                92,
+                93,
+                94,
+                95,
+                96,
+                97,
+                98,
+                99,
+                100,
+                101,
+                102,
+                103,
+                104,
+                105,
+                106,
+                107,
+                108,
+                109,
+                110,
+                111,
+                112,
+                113,
+                114,
+                115,
+                116,
+                117,
+                118,
+                119
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Devanagari text routes to the multilingual checkpoint",
+      "testMappings": [
+        {
+          "file": "tests/router.rs",
+          "lines": "27-38",
+          "implMappings": [
+            {
+              "file": "src/router.rs",
+              "lines": [
+                79,
+                80,
+                81,
+                82,
+                83,
+                84,
+                85,
+                86,
+                87,
+                88,
+                89,
+                90,
+                91,
+                92,
+                93,
+                94,
+                95,
+                96,
+                97,
+                98,
+                99,
+                100,
+                101,
+                102,
+                103,
+                104,
+                105,
+                106,
+                107,
+                108,
+                109,
+                110,
+                111,
+                112,
+                113,
+                114,
+                115,
+                116,
+                117,
+                118,
+                119
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "French text routes to the multilingual checkpoint",
+      "testMappings": [
+        {
+          "file": "tests/router.rs",
+          "lines": "40-51",
+          "implMappings": [
+            {
+              "file": "src/router.rs",
+              "lines": [
+                79,
+                80,
+                81,
+                82,
+                83,
+                84,
+                85,
+                86,
+                87,
+                88,
+                89,
+                90,
+                91,
+                92,
+                93,
+                94,
+                95,
+                96,
+                97,
+                98,
+                99,
+                100,
+                101,
+                102,
+                103,
+                104,
+                105,
+                106,
+                107,
+                108,
+                109,
+                110,
+                111,
+                112,
+                113,
+                114,
+                115,
+                116,
+                117,
+                118,
+                119
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "totalScenarios": 3,
+    "coveredScenarios": 3,
+    "coveragePercent": 100,
+    "testFiles": [
+      "tests/router.rs"
+    ],
+    "implFiles": [
+      "src/router.rs"
+    ],
+    "totalLinesCovered": 159
+  }
+}

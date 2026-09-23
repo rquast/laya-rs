@@ -1,0 +1,13 @@
+{
+  "agent": "claude",
+  "tools": {
+    "test": {
+      "command": "cargo test"
+    },
+    "qualityCheck": {
+      "commands": [
+        "cargo clippy --all-targets"
+      ]
+    }
+  }
+}

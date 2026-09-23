@@ -1,0 +1,208 @@
+{
+  "scenarios": [
+    {
+      "name": "Answer multiple sections and assemble the output",
+      "testMappings": [
+        {
+          "file": "tests/jev_batch.py",
+          "lines": "119-143",
+          "implMappings": [
+            {
+              "file": "scripts/jev_batch.py",
+              "lines": [
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48,
+                49,
+                50,
+                51,
+                52,
+                53,
+                54,
+                55,
+                56,
+                57,
+                58,
+                59,
+                60,
+                61,
+                62,
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69,
+                70,
+                71,
+                72,
+                73,
+                74,
+                75,
+                76,
+                77
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Top-level value that is not an object is rejected",
+      "testMappings": [
+        {
+          "file": "tests/jev_batch.py",
+          "lines": "147-163",
+          "implMappings": [
+            {
+              "file": "scripts/jev_batch.py",
+              "lines": [
+                43,
+                44,
+                45
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A section missing its questions key aborts the run",
+      "testMappings": [
+        {
+          "file": "tests/jev_batch.py",
+          "lines": "167-184",
+          "implMappings": [
+            {
+              "file": "scripts/jev_batch.py",
+              "lines": [
+                51,
+                52,
+                53,
+                54
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "--only skips sections left with no matching questions",
+      "testMappings": [
+        {
+          "file": "tests/jev_batch.py",
+          "lines": "188-209",
+          "implMappings": [
+            {
+              "file": "scripts/jev_batch.py",
+              "lines": [
+                56,
+                57,
+                58,
+                59,
+                60
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A failing section aborts the run without writing output",
+      "testMappings": [
+        {
+          "file": "tests/jev_batch.py",
+          "lines": "213-227",
+          "implMappings": [
+            {
+              "file": "scripts/jev_batch.py",
+              "lines": [
+                62,
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69,
+                70,
+                71,
+                72
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The built laya binary is auto-detected before PATH",
+      "testMappings": [
+        {
+          "file": "tests/jev_batch.py",
+          "lines": "231-267",
+          "implMappings": [
+            {
+              "file": "scripts/jev_batch.py",
+              "lines": [
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                41
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The driver forwards its checkpoint flag to every section call",
+      "testMappings": [
+        {
+          "file": "tests/jev_batch.py",
+          "lines": "271-288",
+          "implMappings": [
+            {
+              "file": "scripts/jev_batch.py",
+              "lines": [
+                67
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "totalScenarios": 7,
+    "coveredScenarios": 7,
+    "coveragePercent": 100,
+    "testFiles": [
+      "tests/jev_batch.py"
+    ],
+    "implFiles": [
+      "scripts/jev_batch.py"
+    ],
+    "totalLinesCovered": 232
+  }
+}

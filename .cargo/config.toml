@@ -1,2 +1,39 @@
 [env]
 CUDARC_CUDA_VERSION = "13030"
+
+[target.aarch64-unknown-linux-gnu]
+# candle-core's CPU GEMM path pulls in `gemm-f16`, whose aarch64 inline asm
+# needs the fullfp16 target feature — without it the native aarch64 build
+# fails with "instruction requires: fullfp16" (this box's CPU supports it;
+# the feature is a no-op requirement on x86_64, which has no fp16 asm in
+# `gemm`). Scoped to the native triple via per-target rustflags so it never
+# leaks into the wasm32-unknown-unknown build (a `-C target-feature` in a
+# global RUSTFLAGS would be passed to every target's compiler).
+rustflags = ["-C", "target-feature=+fullfp16"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# OOM guard
+#
+# This machine has 20 cores, so cargo defaults to -j 20 — spawning 20
+# concurrent rustc/link processes on the heavy dep crates (candle-core,
+# candle-nn, tokenizers, half). That OOMs both `cargo build` and
+# `cargo test` (each of the ~17 integration-test binaries in tests/
+# statically links the full candle crate graph, and a full run also
+# compiles the wasm32-unknown-unknown lib inside tests/wasm_compile.rs).
+# GitHub's 2-4 vCPU runners never hit this because the vCPU ceiling
+# bounds peak memory.
+#
+# Setting build.jobs = 4 here bounds EVERY cargo invocation in this
+# repo — build, test, check, clippy — without needing -j flags in every
+# script or agent command.
+#
+# Precedence (highest wins):
+#   1. -j <n> on the command line
+#   2. CARGO_BUILD_JOBS=<n> environment variable
+#   3. This config file
+#
+# Override for faster builds on machines with headroom:
+#   CARGO_BUILD_JOBS=8 cargo test --test agent
+# ─────────────────────────────────────────────────────────────────────────────
+[build]
+jobs = 4

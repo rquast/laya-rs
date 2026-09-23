@@ -1,0 +1,327 @@
+{
+  "scenarios": [
+    {
+      "name": "The systemone alias behaves identically to classifier",
+      "testMappings": [
+        {
+          "file": "tests/router_endpoints.rs",
+          "lines": "139-162",
+          "implMappings": [
+            {
+              "file": "src/server/router.rs",
+              "lines": [
+                29,
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46
+              ]
+            }
+          ]
+        },
+        {
+          "file": "tests/router_endpoints.rs",
+          "lines": "139-162",
+          "implMappings": [
+            {
+              "file": "src/server/handlers/classifier.rs",
+              "lines": [
+                34,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48,
+                49,
+                50,
+                51,
+                52,
+                53,
+                54,
+                55,
+                56,
+                57,
+                58,
+                59,
+                60,
+                61,
+                62,
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69,
+                70,
+                71,
+                72,
+                73,
+                74,
+                75,
+                76,
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83,
+                84,
+                85,
+                86,
+                87,
+                88,
+                89,
+                90,
+                91,
+                92,
+                93,
+                94,
+                95,
+                96,
+                97,
+                98,
+                99,
+                100
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Health reports readiness without inference",
+      "testMappings": [
+        {
+          "file": "tests/router_endpoints.rs",
+          "lines": "166-182",
+          "implMappings": [
+            {
+              "file": "src/server/handlers/health.rs",
+              "lines": [
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Oversized bodies and wrong content types are rejected before parsing",
+      "testMappings": [
+        {
+          "file": "tests/router_endpoints.rs",
+          "lines": "186-205",
+          "implMappings": [
+            {
+              "file": "src/server/router.rs",
+              "lines": [
+                29,
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46
+              ]
+            }
+          ]
+        },
+        {
+          "file": "tests/router_endpoints.rs",
+          "lines": "186-205",
+          "implMappings": [
+            {
+              "file": "src/server/handlers/classifier.rs",
+              "lines": [
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48,
+                49,
+                50,
+                51,
+                52,
+                53,
+                54,
+                55,
+                56,
+                57,
+                58,
+                59,
+                60,
+                61,
+                62,
+                63,
+                64,
+                65,
+                66,
+                67,
+                68
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Model identity mismatch is a 422 with the loaded model named",
+      "testMappings": [
+        {
+          "file": "tests/router_endpoints.rs",
+          "lines": "209-223",
+          "implMappings": [
+            {
+              "file": "src/server/handlers/classifier.rs",
+              "lines": [
+                71,
+                72,
+                73,
+                74,
+                75,
+                76,
+                77,
+                78
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Internal forward errors surface as 500 and the server keeps serving",
+      "testMappings": [
+        {
+          "file": "tests/router_endpoints.rs",
+          "lines": "227-245",
+          "implMappings": [
+            {
+              "file": "src/server/handlers/classifier.rs",
+              "lines": [
+                80,
+                81,
+                82,
+                83,
+                84,
+                85,
+                86,
+                87,
+                88,
+                89,
+                90,
+                91,
+                92,
+                93,
+                94,
+                95,
+                96,
+                97,
+                98,
+                99
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The OpenAPI document is served for discovery",
+      "testMappings": [
+        {
+          "file": "tests/router_endpoints.rs",
+          "lines": "249-267",
+          "implMappings": [
+            {
+              "file": "src/server/handlers/openapi.rs",
+              "lines": [
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "totalScenarios": 6,
+    "coveredScenarios": 6,
+    "coveragePercent": 100,
+    "testFiles": [
+      "tests/router_endpoints.rs"
+    ],
+    "implFiles": [
+      "src/server/router.rs",
+      "src/server/handlers/classifier.rs",
+      "src/server/handlers/health.rs",
+      "src/server/handlers/openapi.rs"
+    ],
+    "totalLinesCovered": 348
+  }
+}

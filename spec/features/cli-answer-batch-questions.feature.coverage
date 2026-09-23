@@ -1,0 +1,127 @@
+{
+  "scenarios": [
+    {
+      "name": "Answer a mixed batch and write typed answers",
+      "testMappings": [
+        {
+          "file": "tests/cli_answer.rs",
+          "lines": "48-97",
+          "implMappings": [
+            {
+              "file": "src/main.rs",
+              "lines": [
+                123,
+                124,
+                125,
+                126,
+                127,
+                128,
+                129,
+                130,
+                131,
+                132,
+                133,
+                134,
+                135,
+                136,
+                137,
+                138,
+                139,
+                140,
+                141,
+                142,
+                143,
+                144,
+                145,
+                146,
+                147,
+                148,
+                149,
+                150,
+                151,
+                152,
+                153
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Missing state field is an error",
+      "testMappings": [
+        {
+          "file": "tests/cli_answer.rs",
+          "lines": "100-127",
+          "implMappings": [
+            {
+              "file": "src/main.rs",
+              "lines": [
+                128,
+                129,
+                130,
+                131
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "--only restricts the batch to one question",
+      "testMappings": [
+        {
+          "file": "tests/cli_answer.rs",
+          "lines": "130-168",
+          "implMappings": [
+            {
+              "file": "src/main.rs",
+              "lines": [
+                132,
+                133,
+                134,
+                135,
+                136,
+                137,
+                138,
+                139,
+                140,
+                141,
+                142
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Malformed input file is a parse error",
+      "testMappings": [
+        {
+          "file": "tests/cli_answer.rs",
+          "lines": "171-199",
+          "implMappings": [
+            {
+              "file": "src/main.rs",
+              "lines": [
+                124
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "totalScenarios": 4,
+    "coveredScenarios": 4,
+    "coveragePercent": 100,
+    "testFiles": [
+      "tests/cli_answer.rs"
+    ],
+    "implFiles": [
+      "src/main.rs"
+    ],
+    "totalLinesCovered": 193
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "prefixes": {
+    "FOUND": {
+      "prefix": "FOUND",
+      "description": "Foundation Event Storm tasks",
+      "createdAt": "2026-09-21T23:11:26.086Z"
+    },
+    "INFER": {
+      "prefix": "INFER",
+      "description": "Typed decision inference (choice/score/noul answering)",
+      "createdAt": "2026-09-21T23:20:08.111Z"
+    },
+    "ROUTE": {
+      "prefix": "ROUTE",
+      "description": "Language checkpoint routing",
+      "createdAt": "2026-09-21T23:22:10.462Z"
+    },
+    "CHECK": {
+      "prefix": "CHECK",
+      "description": "Checkpoint resolution and download",
+      "createdAt": "2026-09-21T23:28:30.448Z"
+    },
+    "TRAIN": {
+      "prefix": "TRAIN",
+      "description": "RLCD training and temperature calibration",
+      "createdAt": "2026-09-21T23:28:32.630Z"
+    },
+    "DIST": {
+      "prefix": "DIST",
+      "description": "Packaging and release pipeline",
+      "createdAt": "2026-09-21T23:32:21.071Z"
+    },
+    "JEV": {
+      "prefix": "JEV",
+      "description": "Jev/Simple-Jev protocol HTTP server",
+      "createdAt": "2026-09-22T09:55:56.935Z"
+    }
+  }
+}

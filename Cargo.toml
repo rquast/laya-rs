@@ -19,6 +19,13 @@ name = "laya"
 path = "src/lib.rs"
 crate-type = ["rlib", "cdylib"]
 
+# Uses the optional `candle-flash-attn` dep (feature `flash-attn`, CUDA): it
+# must not be built by a plain `cargo test`/`cargo build` on a box without
+# the feature.
+[[example]]
+name = "bench_ops"
+required-features = ["flash-attn"]
+
 [features]
 cuda = ["candle-core/cuda", "candle-nn/cuda"]
 flash-attn = ["cuda", "dep:candle-flash-attn"]
@@ -26,6 +33,15 @@ flash-attn = ["cuda", "dep:candle-flash-attn"]
 [dependencies]
 candle-core = "0.9"
 candle-nn = "0.9"
+# NOTE: deliberately NOT enabling serde_json's `preserve_order` feature
+# crate-wide. It flips every `Value::Object` from a BTreeMap (sorted keys) to
+# an IndexMap (input order), which changes the prompt text for object states
+# in the inference pipeline (schema::serialize_state -> serde_json::to_string)
+# and breaks the episode-prefix tokenization tests in rlcd_training_loop.rs.
+# The Jev protocol layer (src/server/request) instead captures question key
+# order explicitly at the parse boundary (a first `Value` pass plus a
+# serde-ignored second pass that only reads the key sequence), so insertion
+# order is preserved without mutating crate-wide serialization.
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 anyhow = "1"
@@ -61,6 +77,20 @@ whichlang = "0.1"
 # Checkpoint downloads (see `download`). The browser demo fetches with the
 # JS `fetch` API instead (website/src/lib/laya.ts), so this is native-only.
 ureq = "2"
+# Jev protocol server (src/server/): serial model execution behind a tokio
+# model lock + bounded admission queue, with the synchronous candle forward
+# offloaded to the blocking pool (`spawn_blocking` needs `rt`; `sync` for the
+# async Mutex/Semaphore; `net` for the `start_server` bind path (JEV-006);
+# `signal` for the `laya serve` ctrl-c/SIGTERM shutdown wait (JEV-006)).
+# Native-only, like the server module itself.
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "sync", "net", "signal"] }
+# HTTP endpoints (src/server/router.rs, JEV-004): axum 0.8 router +
+# tower-http's TraceLayer only (no CORS/compression layers — protocol
+# clients are same-host). The `wasm32-unknown-unknown` build never links
+# these (the server module itself is cfg-gated), guarded by
+# tests/wasm_compile.rs.
+axum = "0.8.9"
+tower-http = { version = "0.6.11", default-features = false, features = ["trace"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2"
@@ -69,6 +99,16 @@ serde-wasm-bindgen = "0.6"
 console_error_panic_hook = "0.1"
 getrandom = { version = "0.2", features = ["js"] }
 getrandom3 = { package = "getrandom", version = "0.3", features = ["wasm_js"] }
+
+# The Jev protocol server (src/server/) is native-only, so its dev-dependencies
+# are too: tokio powers the execution/queue tests (#[tokio::test] + timers),
+# and tower's `ServiceExt::oneshot` drives the endpoint tests (JEV-004)
+# against `Router::oneshot` without binding a socket. `rt` + `macros` + `time`
+# keep this dev-only dependency minimal (no net, no full multithreaded
+# runtime — the tests never bind sockets).
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+tokio = { version = "1", features = ["rt", "macros", "time", "sync"] }
+tower = "0.5"
 
 [profile.release]
 opt-level = 3

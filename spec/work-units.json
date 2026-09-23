@@ -1,0 +1,2052 @@
+{
+  "version": "0.7.1",
+  "meta": {
+    "version": "1.0.0",
+    "lastUpdated": "2026-09-23T12:09:16.501Z"
+  },
+  "workUnits": {
+    "INFER-001": {
+      "id": "INFER-001",
+      "title": "Ask a single choice question via CLI",
+      "type": "story",
+      "status": "done",
+      "createdAt": "2026-09-21T23:33:39.275Z",
+      "updatedAt": "2026-09-21T23:45:50.594Z",
+      "description": "`laya ask --state ... --question ... --option a --option b` routes the state to a checkpoint, resolves its directory, answers one choice question, and prints choice/confidence/act probability and per-option probabilities.",
+      "epic": "decision-inference",
+      "children": [],
+      "userStory": {
+        "role": "user running the laya CLI",
+        "action": "ask a single choice question against a state",
+        "benefit": "smoke-test a checkpoint without writing a JSON batch file"
+      },
+      "stateHistory": [
+        {
+          "state": "specifying",
+          "timestamp": "2026-09-21T23:37:01.046Z"
+        },
+        {
+          "state": "testing",
+          "timestamp": "2026-09-21T23:42:45.874Z"
+        },
+        {
+          "state": "implementing",
+          "timestamp": "2026-09-21T23:44:54.319Z"
+        },
+        {
+          "state": "validating",
+          "timestamp": "2026-09-21T23:45:08.444Z"
+        },
+        {
+          "state": "done",
+          "timestamp": "2026-09-21T23:45:50.594Z"
+        }
+      ],
+      "rules": [
+        {
+          "id": 0,
+          "text": "The state is routed through `route(state)` to pick the English or multilingual checkpoint, then resolved via model_path::resolve using the routed variant key; an explicit --model/LAYA_MODEL path bypasses routing and resolution entirely",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:37:42.550Z"
+        },
+        {
+          "id": 1,
+          "text": "The CLI prints the routed checkpoint and resolved directory to stderr, then prints `choice=<key> confidence=<c> act_p=<p>` followed by one indented `<option>: <prob>` line per option",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:37:46.220Z"
+        },
+        {
+          "id": 2,
+          "text": "`laya ask` requires --state and --question; --option is a repeatable flag and each value becomes a choice criterion with no description",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:38:14.998Z"
+        }
+      ],
+      "nextRuleId": 4,
+      "examples": [
+        {
+          "id": 0,
+          "text": "Running `laya ask --state \"We were billed twice\" --question \"Which team should handle this?\" --option billing --option technical` routes the state, loads the routed checkpoint, and prints the chosen option with its probability distribution",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:37:49.458Z"
+        },
+        {
+          "id": 1,
+          "text": "Running `laya ask --model /path/to/laya-typed-decisions --state \"...\" --question \"...\" --option a --option b` loads the given checkpoint directory as-is, skipping routing and models-root resolution",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:38:21.629Z"
+        }
+      ],
+      "nextExampleId": 3,
+      "estimate": 2,
+      "architectureNotes": [
+        {
+          "id": 0,
+          "text": "Entry point is Command::Ask in src/main.rs (clap Subcommand). It builds a single QType::Choice Question, calls route() then model_path::resolve(), RLAgent::load(), and agent.system_one().",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:42:11.445Z"
+        },
+        {
+          "id": 1,
+          "text": "Testable without weights: clap argument parsing (required --state/--question, repeatable --option) and --help/--version output. Answering scenarios require a checkpoint (LAYA_TEST_MODEL env var) because weights are not bundled in the repo.",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:42:13.759Z"
+        }
+      ],
+      "nextNoteId": 2,
+      "attachments": [
+        "spec/attachments/INFER-001/ast-research-cli-ask.md"
+      ]
+    },
+    "INFER-002": {
+      "id": "INFER-002",
+      "title": "Answer a batch of typed questions via CLI",
+      "type": "story",
+      "status": "done",
+      "createdAt": "2026-09-21T23:33:41.841Z",
+      "updatedAt": "2026-09-21T23:52:58.943Z",
+      "description": "`laya answer input.json answers.json --model-variant ...` reads a {state, questions} JSON file, answers the batch of typed questions (choice/score/noul) in one forward pass, prints timing to stderr, and writes {qid: answer} JSON to the output file.",
+      "epic": "decision-inference",
+      "children": [],
+      "stateHistory": [
+        {
+          "state": "specifying",
+          "timestamp": "2026-09-21T23:46:30.872Z"
+        },
+        {
+          "state": "testing",
+          "timestamp": "2026-09-21T23:50:52.350Z"
+        },
+        {
+          "state": "implementing",
+          "timestamp": "2026-09-21T23:52:23.244Z"
+        },
+        {
+          "state": "validating",
+          "timestamp": "2026-09-21T23:52:40.701Z"
+        },
+        {
+          "state": "done",
+          "timestamp": "2026-09-21T23:52:58.943Z"
+        }
+      ],
+      "userStory": {
+        "role": "user running the laya CLI",
+        "action": "answer a batch of typed questions against one state in a single forward pass",
+        "benefit": "get typed answers for a whole question battery without writing a Rust program"
+      },
+      "rules": [
+        {
+          "id": 0,
+          "text": "The input file must be a JSON object with a `state` (string or object) and a `questions` object mapping question ids to {type, instructions, criteria}; missing either is an error",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:46:40.432Z"
+        },
+        {
+          "id": 1,
+          "text": "Question ids map to one of three shapes: choice (criteria is an object of key→optional description or an array of strings), score (criteria is an ordered array of level descriptions), or noul (criteria is {\"true\": ..., \"false\": ...}); an empty or unknown type is a parse error",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:46:42.718Z"
+        },
+        {
+          "id": 2,
+          "text": "`--only QID` restricts the batch to that single question; if the restriction leaves zero questions the command errors with `no questions to answer`",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:46:45.712Z"
+        },
+        {
+          "id": 3,
+          "text": "All questions are answered in one `system_one` call; stderr reports `<n> questions in <ms> ms (<ms/question> ms/question)`, and the output file is written as pretty JSON `{qid: {type, ...}}` (choice: choice/confidence/act_probability/probabilities; score: score/legend/probabilities; noul: noul/act_probability)",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:46:48.994Z"
+        }
+      ],
+      "nextRuleId": 4,
+      "examples": [
+        {
+          "id": 0,
+          "text": "A user runs `laya answer input.json answers.json --model /path/to/laya-typed-decisions` where input.json holds a state and three questions (a choice, a score, a noul); the command writes answers.json with one typed answer per question id and prints a per-question timing summary to stderr",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:47:25.405Z"
+        },
+        {
+          "id": 1,
+          "text": "Running `laya answer` on an input file with no `state` field fails with a `missing state` error",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:47:32.321Z"
+        },
+        {
+          "id": 2,
+          "text": "Running `laya answer input.json answers.json --only churn_risk` answers only the question with id `churn_risk` and writes a single-entry answers.json",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:47:36.555Z"
+        }
+      ],
+      "nextExampleId": 4,
+      "estimate": 3,
+      "architectureNotes": [
+        {
+          "id": 0,
+          "text": "Handler: Command::Answer in src/main.rs lines 123-153. Input shape {state, questions: {qid: {type, instructions, criteria}}} parsed via serde_json; `raw_question_to_question` (src/batching.rs:73-109) maps the JSON shapes to Question. Output rendered by `answer_to_json` (src/agent.rs:211-224) into a sorted BTreeMap written with to_string_pretty.",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:49:06.974Z"
+        },
+        {
+          "id": 1,
+          "text": "Ordering in the handler: input file read + JSON parse happens BEFORE checkpoint resolution/load (so a missing/invalid input file or invalid JSON fails without touching the checkpoint); the `missing state` / `missing questions` / `no questions to answer` checks and `--only` filtering happen AFTER `RLAgent::load`. Weight-free tests: invalid-JSON and missing-file error paths; model-gated tests: missing state, --only, and the mixed-batch happy path (LAYA_TEST_MODEL env var).",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:50:24.989Z"
+        }
+      ],
+      "nextNoteId": 3,
+      "attachments": [
+        "spec/attachments/INFER-002/ast-research-cli-answer.md"
+      ]
+    },
+    "INFER-003": {
+      "id": "INFER-003",
+      "title": "Built-in demo run against a state body",
+      "type": "story",
+      "status": "done",
+      "createdAt": "2026-09-21T23:34:01.991Z",
+      "updatedAt": "2026-09-21T23:59:12.062Z",
+      "description": "Running `laya` with no subcommand routes the state, loads the routed checkpoint, and answers a built-in 3-question demo (choice department / score urgency / noul churn) printing one line per answer.",
+      "epic": "decision-inference",
+      "children": [],
+      "stateHistory": [
+        {
+          "state": "specifying",
+          "timestamp": "2026-09-21T23:53:04.452Z"
+        },
+        {
+          "state": "testing",
+          "timestamp": "2026-09-21T23:56:24.576Z"
+        },
+        {
+          "state": "implementing",
+          "timestamp": "2026-09-21T23:57:50.011Z"
+        },
+        {
+          "state": "validating",
+          "timestamp": "2026-09-21T23:58:45.487Z"
+        },
+        {
+          "state": "done",
+          "timestamp": "2026-09-21T23:59:12.062Z"
+        }
+      ],
+      "userStory": {
+        "role": "user who just installed laya",
+        "action": "run `laya` with no subcommand to see the decision engine answer a demo question battery against a body of text",
+        "benefit": "a quick end-to-end smoke test of the installed binary"
+      },
+      "rules": [
+        {
+          "id": 0,
+          "text": "With no subcommand, `laya` takes a positional state body (defaulting to \"We were billed twice for March. Please refund the duplicate.\") and builds a demo state JSON {subject: \"Duplicate charge on invoice 4411\", body: <state>}",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:53:15.669Z"
+        },
+        {
+          "id": 1,
+          "text": "The demo battery is exactly three questions: `department` (choice: billing/technical/sales with criteria descriptions), `urgency` (score: not urgent/soon/blocking), `churn_risk` (noul)",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:53:18.167Z"
+        },
+        {
+          "id": 2,
+          "text": "The body is routed to a checkpoint; `routed to: <checkpoint> (<dir>)` is printed to stdout (println!), and each answer prints one line: choice → `department: choice=<k> confidence=<c> act_p=<p>` + indented option probabilities; score → `urgency: score=<s> confidence=<c> act_p=<p>` + indented level probabilities; noul → `churn_risk: noul=<v> act_p=<p>`",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:55:53.237Z"
+        }
+      ],
+      "nextRuleId": 4,
+      "examples": [
+        {
+          "id": 0,
+          "text": "A user runs `laya` with no arguments at all and the demo runs against the built-in default state body \"We were billed twice for March. Please refund the duplicate.\"",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:53:48.210Z"
+        },
+        {
+          "id": 1,
+          "text": "A user runs `laya \"The server has been down since Tuesday and no one has replied\"` and sees the routed checkpoint line plus three answer lines on stdout — a department choice with option probabilities, an urgency score with level probabilities, and a churn_risk noul value",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:56:09.324Z"
+        }
+      ],
+      "nextExampleId": 3,
+      "estimate": 2,
+      "architectureNotes": [
+        {
+          "id": 0,
+          "text": "Handler: no-subcommand fallback in src/main.rs lines 165-237 (after the Ask/Answer/Train `if let` arms). Builds demo state JSON {subject: \"Duplicate charge on invoice 4411\", body: args.body}, routes via `route(&args.body)`, resolves via `model_path::resolve` (typed-decisions default variant key), loads RLAgent, and answers the hard-coded battery [department choice, urgency score, churn_risk noul].",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:55:22.096Z"
+        },
+        {
+          "id": 1,
+          "text": "Requires a checkpoint (LAYA_TEST_MODEL env var) — the demo path loads the model before printing anything. No weight-free path: both scenarios gate on a real checkpoint because weights are not bundled in the repo.",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:55:31.204Z"
+        }
+      ],
+      "nextNoteId": 2,
+      "attachments": [
+        "spec/attachments/INFER-003/ast-research-cli-demo.md"
+      ]
+    },
+    "TRAIN-001": {
+      "id": "TRAIN-001",
+      "title": "Train (fine-tune) via CLI over a JSONL dataset",
+      "type": "story",
+      "status": "done",
+      "createdAt": "2026-09-21T23:34:07.662Z",
+      "updatedAt": "2026-09-22T00:38:52.303Z",
+      "description": "`laya train MODEL_DIR dataset.jsonl --epochs N [--lr --group-size --sigma --save-to]` loads a checkpoint into a Trainer, runs the RLCD loop over the JSONL records, logs per-epoch loss/reward, and saves trained weights (default `<model_dir>/model.trained.safetensors`).",
+      "epic": "training-calibration",
+      "children": [],
+      "stateHistory": [
+        {
+          "state": "specifying",
+          "timestamp": "2026-09-22T00:35:10.656Z"
+        },
+        {
+          "state": "testing",
+          "timestamp": "2026-09-22T00:37:42.282Z"
+        },
+        {
+          "state": "implementing",
+          "timestamp": "2026-09-22T00:38:07.335Z"
+        },
+        {
+          "state": "validating",
+          "timestamp": "2026-09-22T00:38:19.701Z"
+        },
+        {
+          "state": "done",
+          "timestamp": "2026-09-22T00:38:52.303Z"
+        }
+      ],
+      "userStory": {
+        "role": "ML practitioner",
+        "action": "fine-tune the decision model via `laya train` over a JSONL dataset",
+        "benefit": "the shipped checkpoint is tuned to my domain's decision labels"
+      },
+      "rules": [
+        {
+          "id": 0,
+          "text": "Hyperparameters have defaults: epochs 1, lr 1e-5, group-size 8, sigma 1.0; all are overridable via flags",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:35:38.285Z"
+        },
+        {
+          "id": 1,
+          "text": "The dataset file is JSONL: one training record per line; blank lines are skipped; each record is either a plain state+typed-questions record or a multi-turn episode (kind: \"episode\")",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:35:39.050Z"
+        },
+        {
+          "id": 2,
+          "text": "Each epoch logs one line of mean loss/reward; trained weights are saved to `<model_dir>/model.trained.safetensors` unless --save-to overrides the path",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:35:44.439Z"
+        }
+      ],
+      "nextRuleId": 3,
+      "examples": [
+        {
+          "id": 0,
+          "text": "Running `laya train /path/to/checkpoint train.jsonl` (1 epoch) prints an epoch summary line and writes /path/to/checkpoint/model.trained.safetensors",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:35:44.880Z"
+        },
+        {
+          "id": 1,
+          "text": "Passing --epochs 3 trains for three shuffled passes over the dataset and logs one epoch line per pass",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:35:48.035Z"
+        },
+        {
+          "id": 2,
+          "text": "A JSONL line that is not a valid training record (bad JSON) aborts the run with a parse error instead of silently skipping it",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:35:48.584Z"
+        }
+      ],
+      "nextExampleId": 3,
+      "architectureNotes": [
+        {
+          "id": 0,
+          "text": "Records deserialize into batching::Record (untagged: Episode{kind, ep, qs, src} | Plain{state, qs, src}); blank lines filtered; parse errors propagate (anyhow). train_jsonl shuffles with seeded rand, chunks 32 records/micro-step, option-order shuffling enabled; per-epoch stdout line `epoch {n}: loss={:.4} reward={:.4} ({steps} steps)`. Deterministic given seed.",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:35:53.266Z"
+        },
+        {
+          "id": 1,
+          "text": "CLI `Train` arm in src/main.rs: builds RlcdConfig {lr, group_size, noise_sigma: sigma, ..Default}, Trainer::load(model_dir), trainer.train_jsonl(dataset, epochs), trainer.save(save_to.unwrap_or(model_dir/model.trained.safetensors)). RlcdConfig defaults: lr 1e-5, group 8, sigma 1.0, w_sph 0.5, w_rps 1.0, log_floor -9.21, td_lambda 1.0, max_tokens 16384, max_seqs 256, seed 0.",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:35:53.747Z"
+        }
+      ],
+      "nextNoteId": 2,
+      "attachments": [
+        "spec/attachments/TRAIN-001/ast-research-train.md"
+      ],
+      "estimate": 3
+    },
+    "ROUTE-001": {
+      "id": "ROUTE-001",
+      "title": "Route a state to the English or multilingual checkpoint",
+      "type": "story",
+      "status": "done",
+      "createdAt": "2026-09-21T23:34:30.455Z",
+      "updatedAt": "2026-09-22T00:34:58.191Z",
+      "description": "`route(text)` inspects the state text: a dominant non-Latin Unicode script routes to the multilingual checkpoint immediately; dominant Latin (or no alphabetic content) runs whichlang — English routes to the English checkpoint, anything else to multilingual. Never routed from model confidence.",
+      "epic": "language-routing",
+      "children": [],
+      "stateHistory": [
+        {
+          "state": "specifying",
+          "timestamp": "2026-09-22T00:20:33.424Z"
+        },
+        {
+          "state": "testing",
+          "timestamp": "2026-09-22T00:24:36.492Z"
+        },
+        {
+          "state": "implementing",
+          "timestamp": "2026-09-22T00:28:22.986Z"
+        },
+        {
+          "state": "validating",
+          "timestamp": "2026-09-22T00:34:30.896Z"
+        },
+        {
+          "state": "done",
+          "timestamp": "2026-09-22T00:34:58.191Z"
+        }
+      ],
+      "userStory": {
+        "role": "caller of `route()` (the CLI ask/demo paths, RLAgent)",
+        "action": "determine, from a state's text, which laya checkpoint can actually read it",
+        "benefit": "an English-only checkpoint is never confidently wrong on a script it can't read"
+      },
+      "rules": [
+        {
+          "id": 0,
+          "text": "A fast Unicode script detector counts codepoints over 26 script blocks (Latin, Greek, Cyrillic, Armenian, Hebrew, Arabic, Devanagari, Bengali, Gurmukhi, Gujarati, Oriya, Tamil, Telugu, Kannada, Malayalam, Sinhala, Thai, Lao, Georgian, Hangul, Ethiopic, Khmer, Myanmar, Han, Hiragana, Katakana); when the dominant script is anything other than Latin, the state routes to the multilingual checkpoint immediately, without running any language-ID model",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:20:58.260Z"
+        },
+        {
+          "id": 1,
+          "text": "When the dominant script is Latin (or there is no alphabetic content at all), the router defers to the whichlang statistical language-ID model: English routes to the English checkpoint, any other detected language routes to the multilingual checkpoint",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:21:01.153Z"
+        }
+      ],
+      "nextRuleId": 2,
+      "examples": [
+        {
+          "id": 0,
+          "text": "Routing an ordinary English sentence like \"A customer says a password reset succeeded, but every login attempt still returns 'account locked'.\" returns the English checkpoint — a hand-rolled stopword heuristic once misrouted exactly this text, which is why whichlang is used",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:21:12.737Z"
+        },
+        {
+          "id": 1,
+          "text": "Routing a Devanagari sentence (e.g. \"मुझसे दो बार शुल्क लिया गया\") returns the multilingual checkpoint straight from the script detector, without invoking whichlang",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:21:16.660Z"
+        },
+        {
+          "id": 2,
+          "text": "Routing a French sentence (e.g. \"Le client signale que la facture de mars a été facturée deux fois.\") returns the multilingual checkpoint — script alone can't tell French from English, so whichlang decides",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:21:21.011Z"
+        }
+      ],
+      "nextExampleId": 4,
+      "estimate": 2,
+      "architectureNotes": [
+        {
+          "id": 0,
+          "text": "route() + script_histogram() in src/router.rs (native-only; not compiled for wasm). Two existing unit tests already cover the English-stays-English and Devanagari-routes-multilingual cases; the new integration test re-exercises all three scenarios (English, Devanagari, French) through the public API so the feature file's scenarios have @step-linked coverage.",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:23:26.653Z"
+        },
+        {
+          "id": 1,
+          "text": "All scenarios are fully weight-free and deterministic: `route` returns a `Checkpoint` enum (English | Multilingual) with no I/O. whichlang's 16-language table is embedded in the native binary, so the French case is deterministic on all native targets.",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:23:33.311Z"
+        }
+      ],
+      "nextNoteId": 2,
+      "attachments": [
+        "spec/attachments/ROUTE-001/ast-research-router.md"
+      ]
+    },
+    "CHECK-001": {
+      "id": "CHECK-001",
+      "title": "Resolve a checkpoint directory by variant",
+      "type": "story",
+      "status": "done",
+      "createdAt": "2026-09-21T23:34:34.280Z",
+      "updatedAt": "2026-09-22T01:04:26.537Z",
+      "description": "Resolve the checkpoint directory for a variant: an explicit --model/LAYA_MODEL path wins outright; else a family root (--models-root/LAYA_MODELS_ROOT) subfolder is used when it contains model.safetensors; else the cached standalone download is returned (downloading if needed). Variant keys: typed-decisions, multilingual.",
+      "epic": "checkpoint-management",
+      "children": [],
+      "stateHistory": [
+        {
+          "state": "specifying",
+          "timestamp": "2026-09-22T00:39:12.090Z"
+        },
+        {
+          "state": "testing",
+          "timestamp": "2026-09-22T01:02:25.004Z"
+        },
+        {
+          "state": "implementing",
+          "timestamp": "2026-09-22T01:02:28.682Z"
+        },
+        {
+          "state": "validating",
+          "timestamp": "2026-09-22T01:03:22.051Z"
+        },
+        {
+          "state": "done",
+          "timestamp": "2026-09-22T01:04:26.537Z"
+        }
+      ],
+      "rules": [
+        {
+          "id": 0,
+          "text": "An explicit --model/LAYA_MODEL path wins outright and is used as-is, with no variant lookup, routing, or download",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:39:46.522Z"
+        },
+        {
+          "id": 1,
+          "text": "Without an explicit path: a family root (--models-root/LAYA_MODELS_ROOT), if given, wins when it contains a recognized subfolder (standalone repo basename first, then hub subfolder name) that holds model.safetensors",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:39:50.998Z"
+        },
+        {
+          "id": 2,
+          "text": "Failing both, the variant's cached standalone download ($XDG_CACHE_HOME/laya-rs/<repo-name>) is returned, downloading missing files from Hugging Face first; LAYA_OFFLINE makes a missing file an error instead of a network fetch",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:39:51.377Z"
+        }
+      ],
+      "nextRuleId": 3,
+      "userStory": {
+        "role": "CLI caller (ask/answer paths)",
+        "action": "resolve a laya checkpoint directory for a variant without downloading by hand",
+        "benefit": "the CLI always loads a valid, complete checkpoint for the language it routed to"
+      },
+      "examples": [
+        {
+          "id": 0,
+          "text": "With a family root that contains the variant's subfolder, `laya ask` loads the subfolder checkpoint directly — no cache lookup, no download",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:39:55.038Z"
+        },
+        {
+          "id": 1,
+          "text": "With a cache directory where the variant's checkpoint files already exist, the run uses them directly and downloads nothing",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:40:25.844Z"
+        },
+        {
+          "id": 2,
+          "text": "When a checkpoint file is missing from the cache and LAYA_OFFLINE is set, resolution fails with a clear error telling the user to unset it or pass --model",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:40:26.601Z"
+        }
+      ],
+      "nextExampleId": 4,
+      "architectureNotes": [
+        {
+          "id": 0,
+          "text": "src/model_path.rs (native-only): resolve(default_variant_key, explicit, requested_variant, family_root). VARIANTS: typed-decisions (hf convaiinnovations/laya-typed-decisions), multilingual (hf convaiinnovations/laya-multilingual). Order: explicit as-is -> family root subfolder (candidates: hf repo basename then subfolder; must contain model.safetensors) -> download::download_variant (cache $XDG_CACHE_HOME/laya-rs/<repo-basename>, 5 REQUIRED_FILES, skip existing, LAYA_OFFLINE -> bail with 'unset it or pass --model').",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:00:10.416Z"
+        }
+      ],
+      "nextNoteId": 1,
+      "attachments": [
+        "spec/attachments/CHECK-001/ast-research-model-path.md"
+      ],
+      "estimate": 2
+    },
+    "CHECK-002": {
+      "id": "CHECK-002",
+      "title": "Download a checkpoint into the local cache",
+      "type": "story",
+      "status": "done",
+      "createdAt": "2026-09-21T23:34:37.270Z",
+      "updatedAt": "2026-09-22T01:09:03.051Z",
+      "description": "Download a variant's 5 required checkpoint files from Hugging Face into $XDG_CACHE_HOME/laya-rs/<repo> (default ~/.cache/laya-rs), skipping files already present, fetching via a .part sibling with Content-Length verification and atomic rename, and refusing to touch the network when LAYA_OFFLINE is set.",
+      "epic": "checkpoint-management",
+      "children": [],
+      "stateHistory": [
+        {
+          "state": "specifying",
+          "timestamp": "2026-09-22T01:04:40.272Z"
+        },
+        {
+          "state": "testing",
+          "timestamp": "2026-09-22T01:07:49.927Z"
+        },
+        {
+          "state": "implementing",
+          "timestamp": "2026-09-22T01:08:07.691Z"
+        },
+        {
+          "state": "validating",
+          "timestamp": "2026-09-22T01:08:35.078Z"
+        },
+        {
+          "state": "done",
+          "timestamp": "2026-09-22T01:09:03.051Z"
+        }
+      ],
+      "userStory": {
+        "role": "CLI caller on a fresh machine",
+        "action": "have a variant's checkpoint downloaded into the local cache",
+        "benefit": "`laya ask`/`answer` work with zero manual setup on a fresh machine"
+      },
+      "rules": [
+        {
+          "id": 0,
+          "text": "The five required files (rl_agent_config.json, encoder/config.json, tokenizer/tokenizer.json, tokenizer/tokenizer_config.json, model.safetensors) are downloaded into $XDG_CACHE_HOME/laya-rs/<repo-basename> (default ~/.cache/laya-rs), one per Hugging Face URL",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:04:59.417Z"
+        },
+        {
+          "id": 1,
+          "text": "Each file is written to a .part sibling first and atomically renamed into place after the Content-Length (when advertised) is matched; a short read deletes the .part and aborts, so a killed or truncated download never leaves a checkpoint that looks complete",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:05:07.270Z"
+        },
+        {
+          "id": 2,
+          "text": "Files already present in the cache are skipped; the download is incremental — re-running after a successful download touches nothing",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:05:07.986Z"
+        }
+      ],
+      "nextRuleId": 3,
+      "examples": [
+        {
+          "id": 0,
+          "text": "On a fresh cache, requesting the typed-decisions variant fetches all five files from huggingface.co into ~/.cache/laya-rs/laya-typed-decisions and returns that directory",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:05:11.529Z"
+        },
+        {
+          "id": 1,
+          "text": "With all five files already cached, resolving the variant does not touch the network at all",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:05:12.073Z"
+        }
+      ],
+      "nextExampleId": 2,
+      "architectureNotes": [
+        {
+          "id": 0,
+          "text": "src/download.rs (native-only; ureq 2 sync HTTP — the browser demo uses the JS fetch API instead): REQUIRED_FILES (18); cache_dir() XDG_CACHE_HOME or ~/.cache + laya-rs (22); variant_cache_dir = cache/<hf_repo basename> (37); download_variant (86) loops REQUIRED_FILES — skip if dest.is_file(), LAYA_OFFLINE+missing -> bail, else fetch_to_file; fetch_to_file (40): GET huggingface.co/<repo>/resolve/main/<file> to a .part sibling, 64KiB reads, Content-Length check (short read -> remove .part + bail 'short read for {url}: got {written} bytes, expected {len}'), atomic rename, stderr progress '<name> ... done (N bytes)'.",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:05:28.274Z"
+        }
+      ],
+      "nextNoteId": 2,
+      "attachments": [
+        "spec/attachments/CHECK-002/ast-research-download.md"
+      ],
+      "estimate": 2
+    },
+    "INFER-004": {
+      "id": "INFER-004",
+      "title": "Build a token sequence with option markers from a typed question",
+      "type": "story",
+      "status": "done",
+      "createdAt": "2026-09-21T23:34:47.709Z",
+      "updatedAt": "2026-09-22T00:20:27.740Z",
+      "description": "render_options + build_sequence turn a typed question (choice/score/noul) and a state (string or JSON) into a token sequence with one [MASK] marker per option: `[CLS] <type> question: instructions [SEP] [MASK] opt0 [MASK] opt1 ... [SEP] state [SEP]`, honoring per-option 48-token caps, head token budgets (min 16, min 4/option, min 8 head), max_len truncation, and marker pruning when options don't fit.",
+      "epic": "decision-inference",
+      "children": [],
+      "stateHistory": [
+        {
+          "state": "specifying",
+          "timestamp": "2026-09-21T23:59:08.929Z"
+        },
+        {
+          "state": "testing",
+          "timestamp": "2026-09-22T00:19:39.422Z"
+        },
+        {
+          "state": "implementing",
+          "timestamp": "2026-09-22T00:19:42.778Z"
+        },
+        {
+          "state": "validating",
+          "timestamp": "2026-09-22T00:20:04.429Z"
+        },
+        {
+          "state": "done",
+          "timestamp": "2026-09-22T00:20:27.740Z"
+        }
+      ],
+      "userStory": {
+        "role": "library consumer (RLAgent, Trainer, wasm bindings)",
+        "action": "turn a typed question and a state into the exact token sequence the model consumes",
+        "benefit": "the choice/score/noul contract between the Rust side and the checkpoint stays byte-compatible with the original"
+      },
+      "rules": [
+        {
+          "id": 0,
+          "text": "render_options renders choice options as `key` or `key: description` (skipping empty descriptions), score options as `level <i>: <criterion>` in order, and noul as exactly two options `false: <noul_false>` and `true: <noul_true>` with defaults \"no, the statement does not hold\" / \"yes, the statement holds\" when absent",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:59:33.466Z"
+        },
+        {
+          "id": 1,
+          "text": "build_sequence lays out the tokens as `[CLS] <type> question: <instructions> [SEP] [MASK] opt0 [MASK] opt1 ... [SEP] <state> [SEP]` with one marker index per option; the mask token is blanked inside instructions and options, and a string state is used verbatim while an object state is serialized to JSON",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:59:36.231Z"
+        },
+        {
+          "id": 2,
+          "text": "Token budgets: each option renders as one MASK token plus up to 48 option-text tokens; if the rendered options leave fewer than 16 head tokens, every option's full token vector (mask + text) is capped evenly at (head_max_len-16)/n tokens, with a floor of 4 per option; the head is then truncated to at most max(remaining head budget, 8) tokens; the state is truncated to whatever fits under max_len; and after the final max_len truncation any marker at or beyond max_len is dropped, so the returned marker count can be lower than the option count",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:01:34.653Z"
+        }
+      ],
+      "nextRuleId": 5,
+      "examples": [
+        {
+          "id": 0,
+          "text": "Building a sequence for a choice question with two options and a string state yields ids starting with the CLS token, ending with the SEP token, and exactly two marker positions — one per option — each pointing at a `[MASK]` token",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:59:44.213Z"
+        },
+        {
+          "id": 1,
+          "text": "Rendering a noul question with no explicit true/false criteria yields exactly two options: `false: no, the statement does not hold` and `true: yes, the statement holds`",
+          "deleted": false,
+          "createdAt": "2026-09-21T23:59:48.000Z"
+        },
+        {
+          "id": 2,
+          "text": "Building a sequence whose options would leave fewer than 16 head tokens caps every option at (head_max_len-16)/n tokens (floor 4); after the final max_len truncation any marker that no longer fits is dropped, so the returned marker count can be less than the option count",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:02:04.197Z"
+        }
+      ],
+      "nextExampleId": 4,
+      "estimate": 3,
+      "architectureNotes": [
+        {
+          "id": 0,
+          "text": "Pure Rust in src/schema.rs: `render_options` (lines 43-65) is weight-free (string formatting only); `build_sequence` (lines 89-159) needs only a `tokenizers::Tokenizer` — any checkpoint's tokenizer.json works, or an in-memory WordLevel tokenizer in tests. No candle/model code involved.",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:03:25.202Z"
+        },
+        {
+          "id": 1,
+          "text": "All three scenarios are fully weight-free tests: `render_options` is pure string formatting; `build_sequence` takes a `tokenizers::Tokenizer`, which the tests build in-memory (WordLevel model with known [CLS]/[SEP]/[MASK]/[PAD] ids) — no checkpoint required.",
+          "deleted": false,
+          "createdAt": "2026-09-22T00:03:30.484Z"
+        }
+      ],
+      "nextNoteId": 2,
+      "attachments": [
+        "spec/attachments/INFER-004/ast-research-schema.md"
+      ]
+    },
+    "INFER-005": {
+      "id": "INFER-005",
+      "title": "Answer typed questions through the Rust library API",
+      "type": "story",
+      "status": "done",
+      "createdAt": "2026-09-21T23:34:53.300Z",
+      "updatedAt": "2026-09-22T01:14:48.094Z",
+      "description": "RLAgent::load / load_from_bytes + system_one: load a checkpoint (rl_agent_config.json, tokenizer/, encoder/config.json, model.safetensors) from disk or in-memory bytes, run all questions through the encoder+decision head in one pass, apply per-(qtype, option-count) temperature calibration, and return typed Choice/Score/Noul answers with confidence and act probability; answer_to_json renders the shared {type, ...} JSON shape.",
+      "epic": "decision-inference",
+      "children": [],
+      "stateHistory": [
+        {
+          "state": "specifying",
+          "timestamp": "2026-09-22T01:09:26.955Z"
+        },
+        {
+          "state": "testing",
+          "timestamp": "2026-09-22T01:14:17.645Z"
+        },
+        {
+          "state": "implementing",
+          "timestamp": "2026-09-22T01:14:27.034Z"
+        },
+        {
+          "state": "validating",
+          "timestamp": "2026-09-22T01:14:36.828Z"
+        },
+        {
+          "state": "done",
+          "timestamp": "2026-09-22T01:14:48.094Z"
+        }
+      ],
+      "rules": [
+        {
+          "id": 0,
+          "text": "A checkpoint loads from a directory (rl_agent_config.json, tokenizer/, encoder/config.json, model.safetensors) via RLAgent::load; load_from_bytes does the same from in-memory bytes and is always CPU/F32 (the browser has no filesystem)",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:09:36.641Z"
+        },
+        {
+          "id": 1,
+          "text": "Answers are typed: choice returns the argmax option key with per-option probabilities; score returns a weighted index mean over the legend; noul returns the false-probability as a [0,1] float — each with confidence and act_probability",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:09:45.426Z"
+        },
+        {
+          "id": 2,
+          "text": "system_one answers all questions in ONE encoder+decision-head forward pass: sequences are padded into a batch, option markers drive the head; logits are scaled by the per-(qtype, option-count) temperature (falling back to per-qtype, then 1.0) and softmaxed into probabilities",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:09:45.962Z"
+        }
+      ],
+      "nextRuleId": 3,
+      "userStory": {
+        "role": "Rust developer",
+        "action": "load a laya checkpoint and answer typed questions in my own Rust program via RLAgent",
+        "benefit": "I get typed decisions (choice/score/noul) with calibrated probabilities, no Python runtime or CLI process needed"
+      },
+      "examples": [
+        {
+          "id": 0,
+          "text": "Calling system_one with a question whose options exceed head_max_len fails with an error naming the question id and head_max_len instead of returning a wrong answer",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:09:49.471Z"
+        },
+        {
+          "id": 1,
+          "text": "Calling system_one with one choice question returns a typed answer whose probability entries exactly match the question's options, sum to 1.0, and whose choice is the argmax option",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:09:50.245Z"
+        },
+        {
+          "id": 2,
+          "text": "Answering a score question returns a value between the legend's extremes with one probability per legend entry, and answering a noul question returns a single [0,1] float",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:09:54.130Z"
+        },
+        {
+          "id": 3,
+          "text": "answer_to_json renders each answer with a `type` field of `choice`, `score`, or `noul` plus the typed fields (choice + probabilities map; score + legend + probabilities; noul + act_probability)",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:09:54.807Z"
+        }
+      ],
+      "nextExampleId": 4,
+      "architectureNotes": [
+        {
+          "id": 0,
+          "text": "src/agent.rs: RLAgent {tok, special, model, cfg, device}; load() reads rl_agent_config.json + tokenizer/{tokenizer.json,tokenizer_config.json} + encoder/config.json + model.safetensors (mmaped; F16 on CUDA, F32 on CPU); load_from_bytes (98) same from bytes, always CPU/F32 via safetensors32::load_buffer (wasm path); system_one (126) builds per-question sequences (build_sequence; markers must == render_options len else bail 'options do not fit in head_max_len'), pads batch, ONE DecisionModel::forward -> (logits, act_probs); temperature: cfg.temperature_by_options[temp_bucket(qtype,k)] -> cfg.temperature[qtype_idx] -> 1.0; softmax of logits/temp; Answer::{Choice(argmax key + probs + confidence + act_probability), Score(weighted index mean, legend, probs), Noul(p[1], act_probability)}; answer_to_json (211) {\"type\":\"choice|score|noul\",...}. confidence_from_probs in src/metrics.rs (29); temp_bucket in src/batching.rs (343); render_options in src/schema.rs.",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:10:13.451Z"
+        }
+      ],
+      "nextNoteId": 2,
+      "attachments": [
+        "spec/attachments/INFER-005/ast-research-agent-api.md"
+      ],
+      "estimate": 5
+    },
+    "INFER-006": {
+      "id": "INFER-006",
+      "title": "Answer typed questions in the browser via wasm bindings",
+      "type": "story",
+      "status": "done",
+      "createdAt": "2026-09-21T23:34:56.435Z",
+      "updatedAt": "2026-09-22T07:22:31.335Z",
+      "description": "WasmAgent::load(weights, tokenizer, tokenizer_config_json, encoder_config_json, rl_agent_config_json) loads a checkpoint from in-memory bytes on CPU/F32, and WasmAgent::ask(state_json, questions_json) answers a batch, returning JSON in the same {qid: {type, ...}} shape `laya answer` writes; errors surface the full anyhow context chain to the browser console.",
+      "epic": "decision-inference",
+      "children": [],
+      "stateHistory": [
+        {
+          "state": "specifying",
+          "timestamp": "2026-09-22T01:21:31.891Z"
+        },
+        {
+          "state": "testing",
+          "timestamp": "2026-09-22T07:19:00.296Z"
+        },
+        {
+          "state": "specifying",
+          "timestamp": "2026-09-22T07:20:30.299Z"
+        },
+        {
+          "state": "testing",
+          "timestamp": "2026-09-22T07:21:07.060Z"
+        },
+        {
+          "state": "implementing",
+          "timestamp": "2026-09-22T07:21:41.015Z"
+        },
+        {
+          "state": "validating",
+          "timestamp": "2026-09-22T07:21:48.328Z"
+        },
+        {
+          "state": "done",
+          "timestamp": "2026-09-22T07:22:31.335Z"
+        }
+      ],
+      "rules": [
+        {
+          "id": 0,
+          "text": "The lib must compile for wasm32-unknown-unknown with the pure-Rust `unstable_wasm` tokenizers backend (no `onig` C linkage); WasmAgent loads a checkpoint from in-memory bytes on CPU/F32 only",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:22:23.513Z"
+        }
+      ],
+      "nextRuleId": 4,
+      "userStory": {
+        "role": "Browser/JS developer",
+        "action": "run laya in the browser via WasmAgent (load checkpoint from bytes, ask a batch of typed questions)",
+        "benefit": "I get the same typed decisions in the browser demo without a Python backend"
+      },
+      "examples": [
+        {
+          "id": 0,
+          "text": "The crate compiles for wasm32-unknown-unknown without C-linked tokenizers backends (onig-free `unstable_wasm` feature)",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:22:45.666Z"
+        }
+      ],
+      "nextExampleId": 3,
+      "architectureNotes": [
+        {
+          "id": 0,
+          "text": "src/wasm.rs (wasm32-only module, lib.rs line 17-18): WasmAgent { inner: RLAgent }; load(weights, tokenizer, tokenizer_config_json, encoder_config_json, rl_agent_config_json) -> Result<WasmAgent, JsValue> (CPU/F32 via RLAgent::load_from_bytes + safetensors32::load_buffer); ask(state_json, questions_json) -> Result<String, JsValue> (parses state as arbitrary JSON, questions as BTreeMap<String, RawQuestion>, empty -> Err \"no questions given\", system_one, answer_to_json per qid, serializes {qid: {...}}). Errors: anyhow_to_js_err uses format!(\"{e:#}\") for the full context chain; to_js_err for plain. #[wasm_bindgen(start)] init_panic_hook (console_error_panic_hook). Callers: website/src/lib/laya.ts JS fetches the five files from HF and calls load/ask; lib is crate-type [rlib, cdylib]. Tokenizers use `unstable_wasm` (pure-Rust fancy-regex backend) for ALL targets — onig is C-linked and cannot build for wasm32 (Cargo.toml comment, verified by wasm check).",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:23:55.323Z"
+        }
+      ],
+      "nextNoteId": 2,
+      "estimate": 1,
+      "attachments": [
+        "spec/attachments/INFER-006/ast-research-wasm-bindings.md"
+      ]
+    },
+    "TRAIN-002": {
+      "id": "TRAIN-002",
+      "title": "RLCD training loop with Gaussian exploration and group-mean baseline",
+      "type": "story",
+      "status": "done",
+      "createdAt": "2026-09-21T23:35:01.118Z",
+      "updatedAt": "2026-09-22T08:35:35.728Z",
+      "description": "Trainer.load/train_step/train_jsonl over Record items (plain questions + multi-turn episodes): encode_record builds items with option shuffling for non-score questions, collate_items pads into batch tensors, pack_groups splits under token budgets keeping each record's items together, and the REINFORCE step samples n*g noisy logit rows, scores them with the strictly-proper reward, applies a group-mean baseline, bootstraps episode targets with TD(lambda), adds the act-head weighted-Cross-entropy auxiliary loss, and steps AdamW.",
+      "epic": "training-calibration",
+      "children": [],
+      "stateHistory": [
+        {
+          "state": "specifying",
+          "timestamp": "2026-09-22T07:38:16.018Z"
+        },
+        {
+          "state": "testing",
+          "timestamp": "2026-09-22T08:04:03.880Z"
+        },
+        {
+          "state": "implementing",
+          "timestamp": "2026-09-22T08:33:33.768Z"
+        },
+        {
+          "state": "validating",
+          "timestamp": "2026-09-22T08:35:18.394Z"
+        },
+        {
+          "state": "done",
+          "timestamp": "2026-09-22T08:35:35.728Z"
+        }
+      ],
+      "userStory": {
+        "role": "ML practitioner",
+        "action": "run the RLCD training loop — record encoding, batching, and the REINFORCE-with-Gaussian-exploration update",
+        "benefit": "the checkpoint improves on my domain records before it is deployed"
+      },
+      "rules": [
+        {
+          "id": 0,
+          "text": "Score question options keep ordinal order (never shuffled) and noul is always exactly [false, true]; episodes sample `episode_prefix_lengths(n_turns, max_prefixes)` prefixes — all 1..=n when n <= max_prefixes, otherwise max_prefixes evenly spaced rounded lengths (deduped, sorted) — and each prefix item is a noul question over ctx+conversation with target [1-y, y] and label round(y)",
+          "deleted": false,
+          "createdAt": "2026-09-22T07:43:45.527Z"
+        },
+        {
+          "id": 1,
+          "text": "collate_items pads a flat list of Items into row-major batch tensors of [n, l] ids (pad id elsewhere) and attention mask (1 = real token), [n, kmax] marker positions (1.0 marker mask = real option, target row holds the soft target), plus per-row qtype index (choice=0, score=1, noul=2) and label (-1 = unlabeled)",
+          "deleted": false,
+          "createdAt": "2026-09-22T07:43:45.755Z"
+        },
+        {
+          "id": 2,
+          "text": "pack_groups splits sampled record groups into padded-token-budgeted sub-batches (max_tokens on max_item_len x total_items and max_seqs on sequence count): empty groups are dropped, groups are sorted by their max item length (deterministic), a group whose own padded cost exceeds the budget is split alone into step=ceil groups, and a record's items (all its questions or all its episode prefixes) are never split across sub-batches",
+          "deleted": false,
+          "createdAt": "2026-09-22T07:43:45.976Z"
+        },
+        {
+          "id": 3,
+          "text": "make_token_batches length-buckets record indices under a padded-token budget (greedy: a record starts a new batch when max_len x count or the sequence count would exceed the budget), shuffles the record order and the final batch list with the caller RNG, and returns every record index exactly once",
+          "deleted": false,
+          "createdAt": "2026-09-22T07:43:46.205Z"
+        },
+        {
+          "id": 4,
+          "text": "Training records deserialize as untagged JSON into batching::Record: plain `{state, qs, src}` (state any JSON value; each qs entry a typed question with optional integer `y` label and optional soft `target` vector) or episode `{kind: \"episode\", ep: {ctx, turns, y}, qs}`; unknown question `type` strings panic",
+          "deleted": false,
+          "createdAt": "2026-09-22T07:43:46.427Z"
+        },
+        {
+          "id": 5,
+          "text": "encode_record builds one model-ready Item per question (or per episode prefix): the question's option order is shuffled with the caller RNG for every non-score question when train=true; the soft target (or one-hot y) and label are remapped into the shuffled option order; items whose markers do not all fit the max_len budget are dropped rather than trained on a truncated answer space",
+          "deleted": false,
+          "createdAt": "2026-09-22T07:43:46.647Z"
+        },
+        {
+          "id": 6,
+          "text": "The act-head auxiliary loss is a weighted binary cross-entropy over the act-head logits with target 1 (escalate) exactly when the policy's clean argmax choice is wrong versus the item's label; wrong-answer items get the checkpoint's act_costs[\"escalate\"] floor 0.1 weight, correct items 1.0, unlabeled items are excluded (weight 0); total loss = reinforce_loss + act_loss_weight x act_loss",
+          "deleted": false,
+          "createdAt": "2026-09-22T07:43:54.722Z"
+        },
+        {
+          "id": 7,
+          "text": "The REINFORCE loss is the mean over items and group members of (logit diff squared / (2 sigma^2), summed over real option slots) x advantage; episode (multi-turn) items first bootstrap their targets with td_lambda_targets — walking each record's prefix items backward from the final prefix, g_j = (1-lambda)*p_true[next] + lambda*g_{j+1}, where p_true is the policy's clean P(option 1 / true), writing [1-g, g] targets — and the loss is back-propagated through the live (non-detached) logits with an AdamW optimizer step",
+          "deleted": false,
+          "createdAt": "2026-09-22T07:43:54.893Z"
+        },
+        {
+          "id": 8,
+          "text": "Trainer::load reads rl_agent_config.json (head_layers, max_len, head_max_len, max_prefixes, act_costs), the tokenizer pair, the encoder config, and overwrites the from-scratch DecisionModel (encoder + type embedding + 2 head layers + scorer + act head, n_act = act_costs.len()+1) with model.safetensors; train_jsonl parses JSONL records (blank lines skipped, parse errors propagate), shuffles record order per epoch with the seeded RNG, chunks 32 records per micro-step, enables option shuffling, and logs `epoch {n}: loss={:.4} reward={:.4} ({steps} steps)`; RlcdConfig defaults are lr 1e-5, group_size 8, sigma 1.0, w_sph 0.5, w_rps 1.0, log_floor -9.21, td_lambda 1.0, act_loss_weight 1.0, max_tokens 16384, max_seqs 256, seed 0",
+          "deleted": false,
+          "createdAt": "2026-09-22T07:43:55.082Z"
+        },
+        {
+          "id": 9,
+          "text": "REINFORCE step: for each batch item sample group_size g noisy logit rows by adding zero-mean N(0, sigma^2) noise (drawn from the seeded RNG) to the detached logits, masked to real option slots; the per-row reward is the strictly-proper scoring rule (log + spherical + ranked-probability penalty for score questions) evaluated on the softmax of the noisy logits against the (TD-bootstrap) target; the group-mean of the g rewards is the per-item baseline (GRPO-style) and the advantage is reward minus baseline",
+          "deleted": false,
+          "createdAt": "2026-09-22T07:43:55.260Z"
+        }
+      ],
+      "nextRuleId": 10,
+      "architectureNotes": [
+        {
+          "id": 0,
+          "text": "src/batching.rs (encode_record, collate_items, pack_groups, make_token_batches, episode_prefix_lengths, temp_bucket, td_lambda_targets) + src/train.rs (Trainer::load/train_step/train_jsonl, proper_reward via metrics, softmax/reinforce/weighted-CE helpers). Pure pipeline functions are unit-testable with an in-memory WordLevel tokenizer (see tests/schema.rs pattern); Trainer::load/train_step require a real checkpoint and gate on LAYA_TEST_MODEL (skip when unset).",
+          "deleted": false,
+          "createdAt": "2026-09-22T07:44:36.946Z"
+        }
+      ],
+      "nextNoteId": 1,
+      "examples": [
+        {
+          "id": 0,
+          "text": "collate_items on two items with ids of different lengths and different option counts pads ids to [2, l] with the pad id and attention 0 beyond each item's real length, pads marker slots to kmax with mask 0, and sets the qtype row to the item's question-type index and label row to each item's label",
+          "deleted": false,
+          "createdAt": "2026-09-22T07:47:59.753Z"
+        },
+        {
+          "id": 1,
+          "text": "encode_record on a plain record whose choice question (options billing, technical) carries y=1 with a seeded RNG and train=true returns one item whose two markers are still both [MASK] tokens, but the option text in the ids is in shuffled order while target and label point at the same semantic option (technical) in the new order",
+          "deleted": false,
+          "createdAt": "2026-09-22T07:47:59.992Z"
+        },
+        {
+          "id": 2,
+          "text": "make_token_batches on eight records of lengths [300, 300, 200, 200, 100, 100, 100, 100] with one sequence each, max_tokens 1000, max_seqs 8, returns batches that never exceed the padded-token budget, each record appearing exactly once, in a shuffled batch order",
+          "deleted": false,
+          "createdAt": "2026-09-22T07:48:00.205Z"
+        },
+        {
+          "id": 3,
+          "text": "pack_groups on three record groups whose individual max-lengths and item counts respect the budget returns one sub-batch containing all three groups (empty groups dropped); shrinking max_tokens so one group alone exceeds the budget splits that group alone into ceil-sized chunks while the other groups each stay in their own sub-batch",
+          "deleted": false,
+          "createdAt": "2026-09-22T07:48:00.422Z"
+        },
+        {
+          "id": 4,
+          "text": "encode_record on an episode record with 3 turns and max_prefixes 6 yields exactly 3 noul items (targets [1-y, y], label round(y), episode=true, ep_len=3); with max_prefixes 2 it yields exactly 2 items at the evenly spaced prefix lengths 1 and 3",
+          "deleted": false,
+          "createdAt": "2026-09-22T07:48:00.626Z"
+        }
+      ],
+      "nextExampleId": 6,
+      "estimate": 8,
+      "attachments": [
+        "spec/attachments/TRAIN-002/ast-research-rlcd-training-pipeline.md"
+      ],
+      "virtualHooks": [
+        {
+          "name": "cargo",
+          "event": "pre-implementing",
+          "command": "cargo test --test rlcd_training_loop",
+          "blocking": true
+        }
+      ]
+    },
+    "TRAIN-003": {
+      "id": "TRAIN-003",
+      "title": "Fit per-(question-type, option-count) calibration temperatures",
+      "type": "story",
+      "status": "done",
+      "createdAt": "2026-09-21T23:35:05.110Z",
+      "updatedAt": "2026-09-22T01:19:42.173Z",
+      "description": "fit_temperature / fit_temperatures: post-hoc 1-D grid search (0.05..20.0 step 0.05) minimizing mean NLL per temp_bucket(qtype, k) — buckets 'choice:2', 'choice:3-5', 'choice:6-10', 'choice:11+' etc. — returning the temperature map stored in rl_agent_config.json's temperature_by_options.",
+      "epic": "training-calibration",
+      "children": [],
+      "stateHistory": [
+        {
+          "state": "specifying",
+          "timestamp": "2026-09-22T01:15:31.077Z"
+        },
+        {
+          "state": "testing",
+          "timestamp": "2026-09-22T01:18:59.478Z"
+        },
+        {
+          "state": "implementing",
+          "timestamp": "2026-09-22T01:19:03.029Z"
+        },
+        {
+          "state": "validating",
+          "timestamp": "2026-09-22T01:19:19.345Z"
+        },
+        {
+          "state": "done",
+          "timestamp": "2026-09-22T01:19:42.173Z"
+        }
+      ],
+      "userStory": {
+        "role": "ML practitioner",
+        "action": "fit per-(question-type, option-count) calibration temperatures over a labeled eval set via fit_temperatures",
+        "benefit": "the checkpoint's probability outputs are calibrated on my domain without retraining"
+      },
+      "rules": [
+        {
+          "id": 0,
+          "text": "Each temperature is the 1-D grid minimum over 0.05..20.0 in steps of 0.05 (400 candidates) that minimizes the mean NLL of the samples in its bucket; temperatures are fit independently per bucket",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:15:41.325Z"
+        },
+        {
+          "id": 1,
+          "text": "Samples group into buckets by temp_bucket(qtype, option-count) — 'choice:2', 'choice:3-5', 'choice:6-10', 'choice:11+' (and the same sizes for score/noul) — so one temperature is returned per bucket that has at least one sample",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:15:45.965Z"
+        },
+        {
+          "id": 2,
+          "text": "fit_temperatures is a pure, weight-free post-hoc pass over already-computed logits: no checkpoint, model, or network is involved",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:15:46.179Z"
+        }
+      ],
+      "nextRuleId": 3,
+      "examples": [
+        {
+          "id": 0,
+          "text": "Two choice samples with two options each land in one 'choice:2' bucket and return a single shared temperature for that bucket",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:15:49.930Z"
+        },
+        {
+          "id": 1,
+          "text": "A sample whose target is NOT the argmax (e.g. logits [4.0, -4.0] with the second option as target) fits a temperature well above 1.0, because flattening the logits raises the target's probability",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:16:45.186Z"
+        },
+        {
+          "id": 2,
+          "text": "Samples with different option counts land in different buckets — two-option choice samples in 'choice:2', three-option choice samples in 'choice:3-5' — each returning its own temperature",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:16:45.395Z"
+        }
+      ],
+      "nextExampleId": 4,
+      "architectureNotes": [
+        {
+          "id": 0,
+          "text": "src/train.rs: fit_temperature(logits, target) (341) grid 0.05..20.0 step 0.05 (400 candidates), argmin of single-sample NLL (-ln p_target after softmax of logits/t, p clamped at 1e-12), default best_t 1.0; fit_temperatures(samples: &[(QType, Vec<f32>, usize)]) (359) groups by batching::temp_bucket(qtype, logits.len()) (bucket sizes 2 / 3-5 / 6-10 / 11+), per bucket argmin of MEAN NLL over the same grid; returns HashMap<String, f32> (bucket -> temperature). Pure: no I/O, no model. Used at runtime by RLAgent::system_one (temperature_by_options lookup, fallback to per-qtype temperature then 1.0).",
+          "deleted": false,
+          "createdAt": "2026-09-22T01:16:53.534Z"
+        }
+      ],
+      "nextNoteId": 1,
+      "attachments": [
+        "spec/attachments/TRAIN-003/ast-research-temperature.md"
+      ],
+      "estimate": 2
+    },
+    "INFER-007": {
+      "id": "INFER-007",
+      "title": "Batch-answer a multi-section jev-questions file",
+      "type": "story",
+      "status": "done",
+      "createdAt": "2026-09-21T23:35:15.804Z",
+      "updatedAt": "2026-09-22T08:56:31.808Z",
+      "description": "scripts/jev_batch.py questions.json answers.json --model-dir DIR [--only QID] [--binary PATH]: the multi-section batch driver — reads a jev-questions-style {section: {state, questions}} file, calls `laya answer` once per section into a temp dir, and assembles {section: {qid: answer}} JSON to the output.",
+      "epic": "decision-inference",
+      "children": [],
+      "stateHistory": [
+        {
+          "state": "specifying",
+          "timestamp": "2026-09-22T08:38:52.207Z"
+        },
+        {
+          "state": "testing",
+          "timestamp": "2026-09-22T08:53:05.078Z"
+        },
+        {
+          "state": "implementing",
+          "timestamp": "2026-09-22T08:54:34.325Z"
+        },
+        {
+          "state": "validating",
+          "timestamp": "2026-09-22T08:55:14.726Z"
+        },
+        {
+          "state": "done",
+          "timestamp": "2026-09-22T08:56:31.808Z"
+        }
+      ],
+      "userStory": {
+        "role": "user running a jev-questions battery across multiple sections",
+        "action": "batch-answer every section through the laya CLI driver script",
+        "benefit": "get a {section: {qid: answer}} file without writing glue code"
+      },
+      "rules": [
+        {
+          "id": 0,
+          "text": "The driver calls the laya binary once per section, in input-file order, passing the section's state and questions as {state, questions} JSON plus the user's checkpoint flags; each section's stdout is suppressed and its stderr passes through",
+          "deleted": false,
+          "createdAt": "2026-09-22T08:42:28.895Z"
+        },
+        {
+          "id": 1,
+          "text": "The input file must be a JSON object mapping section names to {state, questions} bodies; a top-level value that is not an object is an error before any section is processed",
+          "deleted": false,
+          "createdAt": "2026-09-22T08:42:29.133Z"
+        },
+        {
+          "id": 2,
+          "text": "Each section body must contain both a `state` and a `questions` key; a section missing either is a hard error naming the section, aborting the run before its `laya answer` call",
+          "deleted": false,
+          "createdAt": "2026-09-22T08:42:29.367Z"
+        },
+        {
+          "id": 3,
+          "text": "`--only QID` is applied per section: questions whose id does not match are dropped before the `laya answer` call, and a section left with zero questions after filtering is skipped entirely — it gets no `laya answer` call and no entry in the output",
+          "deleted": false,
+          "createdAt": "2026-09-22T08:42:33.455Z"
+        },
+        {
+          "id": 4,
+          "text": "A section's `laya answer` invocation exiting non-zero (bad question shape, missing state inside, no questions after filtering, checkpoint load failure, ...) aborts the whole run via subprocess check; no output file is written",
+          "deleted": false,
+          "createdAt": "2026-09-22T08:42:33.656Z"
+        },
+        {
+          "id": 5,
+          "text": "The laya binary is located in order: an explicit --binary flag, else target/release/laya in the repository root (two directories up from scripts/), else target/debug/laya, else `laya` from PATH; the default --model-dir points at /mnt/extra/ai/laya/typed-decisions",
+          "deleted": false,
+          "createdAt": "2026-09-22T08:42:48.240Z"
+        },
+        {
+          "id": 6,
+          "text": "Each section's intermediate {state, questions} input and {qid: answer} output files live in a single temporary directory named <section>.in.json / <section>.out.json, which is removed when the run finishes (success or failure); the temp path is not exposed to the user",
+          "deleted": false,
+          "createdAt": "2026-09-22T08:42:48.459Z"
+        },
+        {
+          "id": 7,
+          "text": "The output file is written exactly once, after all sections succeed, as a JSON object mapping each section to a {qid: that section's laya answer result for that qid} object, pretty-printed with keys sorted at every level",
+          "deleted": false,
+          "createdAt": "2026-09-22T08:42:48.675Z"
+        }
+      ],
+      "nextRuleId": 9,
+      "examples": [
+        {
+          "id": 0,
+          "text": "questions.json holds two sections (s1 with a choice question, s2 with a noul question); running the driver writes answers.json as {\"s1\": {\"department\": {...choice...}}, \"s2\": {\"churn_risk\": {...noul...}}} and prints `wrote answers.json`",
+          "deleted": false,
+          "createdAt": "2026-09-22T08:42:52.473Z"
+        },
+        {
+          "id": 1,
+          "text": "Running the driver on a file whose top-level value is a JSON array (or any non-object) exits with `expected top-level object of {section: {state, questions}}` and runs no `laya answer` call",
+          "deleted": false,
+          "createdAt": "2026-09-22T08:42:52.664Z"
+        },
+        {
+          "id": 2,
+          "text": "A section body missing its `questions` key exits with `s1: missing questions` (the section name in the error) and writes no output",
+          "deleted": false,
+          "createdAt": "2026-09-22T08:42:52.897Z"
+        },
+        {
+          "id": 3,
+          "text": "With `--only churn_risk` against a file where only section s2 has that question id, s1 is skipped entirely (no `laya answer` call, no `wrote` line for it) and answers.json contains only the s2 entry",
+          "deleted": false,
+          "createdAt": "2026-09-22T08:42:55.930Z"
+        },
+        {
+          "id": 4,
+          "text": "Pointing `--binary` at a non-writable or missing checkpoint makes the section's `laya answer` exit non-zero; the driver aborts (subprocess check) and writes no answers.json",
+          "deleted": false,
+          "createdAt": "2026-09-22T08:42:56.112Z"
+        },
+        {
+          "id": 5,
+          "text": "In a fresh clone the driver auto-detects target/debug/laya (or target/release/laya if present) without --binary; when neither build exists it falls back to `laya` on PATH",
+          "deleted": false,
+          "createdAt": "2026-09-22T08:42:56.340Z"
+        },
+        {
+          "id": 6,
+          "text": "CONTRACT MISMATCH (as-built): the driver passes `--model-dir DIR` to `laya answer`, but the current `Answer` subcommand (src/main.rs:66-77) accepts `--model` (env LAYA_MODEL), `--model-variant` and `--models-root` — never `--model-dir`. Running today's script against today's binary fails with `error: unexpected argument '--model-dir' found` for the first section, so no answers.json is written. README.md:159-166 and website/src/components/docs/Cli.tsx also still document `--model-dir` for `laya ask`/`laya answer`",
+          "deleted": false,
+          "createdAt": "2026-09-22T08:43:29.072Z"
+        }
+      ],
+      "nextExampleId": 7,
+      "assumptions": [
+        "Reverse ACDD convention: the feature file documents as-built behavior, including the as-built `--model-dir`/`--model` contract mismatch (kept visible as a scenario), rather than the spec unilaterally fixing the driver"
+      ],
+      "estimate": 3,
+      "architectureNotes": [
+        {
+          "id": 0,
+          "text": "The as-built --model-dir/--model contract mismatch (driver passes --model-dir; Answer subcommand defines --model/--model-variant/--models-root) is documented in the feature's architecture block and assumed as-is per the reverse-ACDD convention — this work unit does not fix the flag contract",
+          "deleted": false,
+          "createdAt": "2026-09-22T08:46:18.708Z"
+        },
+        {
+          "id": 1,
+          "text": "The driver is scripts/jev_batch.py (Python 3 stdlib only: argparse, json, subprocess, tempfile, pathlib) — no test framework dependency is added; tests live in tests/jev_batch.py as plain assert-based pytest-style functions, runnable via `python3 -m pytest` or as plain scripts",
+          "deleted": false,
+          "createdAt": "2026-09-22T08:46:18.934Z"
+        },
+        {
+          "id": 2,
+          "text": "Tests invoke the real scripts/jev_batch.py via python3 subprocess with a stand-in `laya` shell-script binary (records argv, writes the section output file) so per-section behavior is observable without the real checkpoint; end-to-end scenarios with the real binary + LAYA_TEST_MODEL stay gated and skipped, matching the tests/cli_answer.rs convention",
+          "deleted": false,
+          "createdAt": "2026-09-22T08:46:19.141Z"
+        }
+      ],
+      "nextNoteId": 3,
+      "attachments": [
+        "spec/attachments/INFER-007/ast-research-jev-batch.md"
+      ]
+    },
+    "JEV-002": {
+      "id": "JEV-002",
+      "title": "Jev protocol HTTP server: architecture and protocol reference",
+      "type": "story",
+      "status": "done",
+      "createdAt": "2026-09-22T09:59:10.752Z",
+      "updatedAt": "2026-09-23T12:09:16.501Z",
+      "description": "Parent story for the JEV epic: laya-rs serves a convaiinnovations/laya checkpoint behind the open Jev/Simple-Jev classifier contract (POST /v1/classifier, alias /v1/systemone, GET /health). A new `laya serve` subcommand runs an axum/tokio/tower-http server exposing the laya RLAgent through strict v1 request validation, laya-native answer mapping, single-flight model execution with a 429 admission queue, and protocol error envelopes. This card holds the overarching architecture, the example-mapping rules, and the attached protocol documentation (architecture.md + protocol-reference.md, incl. JSON Schemas); the implementation is decomposed into child stories JEV-003..JEV-007 (request schema → mapping/execution → endpoints → CLI → conformance gate).",
+      "epic": "jev-server",
+      "children": [
+        "JEV-003",
+        "JEV-004",
+        "JEV-007",
+        "JEV-006",
+        "JEV-005"
+      ],
+      "userStory": {
+        "role": "developer or ops engineer self-hosting typed decision serving",
+        "action": "run a Rust HTTP server speaking the open Jev/Simple-Jev classifier protocol, backed by laya-rs native inference instead of the Python/PyTorch simple-jev Laya backend",
+        "benefit": "any Jev-protocol client can use my self-hosted, sub-35ms laya checkpoint without a Python runtime"
+      },
+      "stateHistory": [
+        {
+          "state": "specifying",
+          "timestamp": "2026-09-22T10:03:00.702Z"
+        },
+        {
+          "state": "testing",
+          "timestamp": "2026-09-23T11:49:51.767Z"
+        },
+        {
+          "state": "implementing",
+          "timestamp": "2026-09-23T12:05:37.230Z"
+        },
+        {
+          "state": "validating",
+          "timestamp": "2026-09-23T12:05:44.936Z"
+        },
+        {
+          "state": "done",
+          "timestamp": "2026-09-23T12:09:16.501Z"
+        }
+      ],
+      "rules": [
+        {
+          "id": 0,
+          "text": "The HTTP stack follows a proven axum serving pattern: axum 0.8 Router + tokio runtime, tower-http TraceLayer (CORS optional), build_router(state) factory, Clone-over-Arc state newtype injected via the axum State extractor, and a start_server -> ServerHandle { port, oneshot shutdown, JoinHandle } lifecycle with graceful shutdown",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:03:06.234Z"
+        },
+        {
+          "id": 1,
+          "text": "The server implements the open Simple-Jev v1 classifier contract (POST /v1/classifier + exact alias POST /v1/systemone, GET /health) over a convaiinnovations/laya checkpoint; TypeSafe's hosted REST envelope and its five preset endpoints are explicitly out of scope",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:03:09.326Z"
+        },
+        {
+          "id": 2,
+          "text": "All new HTTP server dependencies (axum, tokio, tower-http) are native-only, target-gated exactly like the existing ureq/whichlang deps, so the wasm32-unknown-unknown build of the crate is untouched; the protocol layer (request/response modules) never imports candle types — it only touches RLAgent at the system_one call boundary, keeping it weight-free testable",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:04:51.307Z"
+        },
+        {
+          "id": 3,
+          "text": "Implementation is decomposed into the children JEV-003 (request schema) → JEV-005 (mapping/execution) → JEV-004 (endpoints) → JEV-006 (CLI) → JEV-007 (conformance gate); each child carries its own feature file and card doc under docs/jev-server/",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:04:51.524Z"
+        }
+      ],
+      "nextRuleId": 4,
+      "examples": [
+        {
+          "id": 0,
+          "text": "A simple-jev Python client pointed at the laya-rs server (base URL swapped) completes its quickstart: GET /v1/models-style discovery via /health, then POST /v1/classifier with the red-bicycle example returns a choice answer with probabilities and a zero output-token usage block",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:05:36.189Z"
+        }
+      ],
+      "nextExampleId": 1,
+      "architectureNotes": [
+        {
+          "id": 0,
+          "text": "Architecture reference: docs/jev-server/architecture.md (module layout, request pipeline diagram, concurrency model, error model, testing strategy, child-card table). Protocol reference: docs/jev-server/protocol-reference.md (JSON Schema for the v1 request, response/usage/error contracts, laya-native answer semantics, CLI parity table). Both attached to this card.",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:05:36.396Z"
+        }
+      ],
+      "nextNoteId": 1,
+      "attachments": [
+        "spec/attachments/JEV-002/architecture.md",
+        "spec/attachments/JEV-002/protocol-reference.md",
+        "spec/attachments/JEV-002/ast-research-architecture-built.md"
+      ],
+      "estimate": 3
+    },
+    "JEV-003": {
+      "id": "JEV-003",
+      "title": "Strict Jev classifier request schema (parse + validate)",
+      "type": "story",
+      "status": "done",
+      "createdAt": "2026-09-22T10:02:08.760Z",
+      "updatedAt": "2026-09-22T11:41:21.165Z",
+      "description": "src/server/request.rs: parse a /v1/classifier body into a fully-typed, pre-inference ClassifierRequest — top-level unknown-field tolerance, state/messages context XOR, per-type strict question validation (choice 2–50, score 2–50 ordered, noul true/false-only), text-only chat messages, options/reserved-field rejection, canonical JSON serialization of non-string instructions/criteria, and dotted-path 422 error details. Pure module, weight-free testable. Card doc: docs/jev-server/JEV-003-request-schema.md",
+      "epic": "jev-server",
+      "children": [],
+      "parent": "JEV-002",
+      "userStory": {
+        "role": "server implementer",
+        "action": "have a typed request validated against the Jev v1 contract before any inference runs",
+        "benefit": "clients get readable 422 errors with dotted field paths instead of panics or 500s"
+      },
+      "stateHistory": [
+        {
+          "state": "specifying",
+          "timestamp": "2026-09-22T10:03:00.544Z"
+        },
+        {
+          "state": "testing",
+          "timestamp": "2026-09-22T10:46:36.048Z"
+        },
+        {
+          "state": "implementing",
+          "timestamp": "2026-09-22T10:51:37.586Z"
+        },
+        {
+          "state": "validating",
+          "timestamp": "2026-09-22T11:36:25.183Z"
+        },
+        {
+          "state": "done",
+          "timestamp": "2026-09-22T11:41:21.165Z"
+        }
+      ],
+      "rules": [
+        {
+          "id": 0,
+          "text": "Unknown top-level request fields (stream, temperature, max_tokens, ...) are ignored and never cause 422; unknown question fields, unknown option fields, unknown noul criterion keys, unknown message fields, and unknown Content-Types are rejected with 422 schema-envelope errors naming the dotted field path",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:03:11.966Z"
+        },
+        {
+          "id": 1,
+          "text": "Context XOR: exactly one non-null of state (string/object/array; empty string/{}/[] are valid; bare number/bool/null rejected) or messages (nonempty array of {role: system|developer|user|assistant, content: string} with no extra fields); both set or both absent → 422 'Provide exactly one of state or messages'",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:03:15.258Z"
+        },
+        {
+          "id": 2,
+          "text": "Per-type question validation: choice criteria is an object of 2-50 candidate-ID keys (insertion order preserved — it assigns labels and breaks exact ties), score criteria is an ordered array of 2-50 levels, noul criteria is optional and when present an object with only the keys 'true' and/or 'false'; instructions accept string/object/array/null; all cardinality or shape violations → 422 with param naming the question id",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:03:18.072Z"
+        },
+        {
+          "id": 3,
+          "text": "Non-string instructions/criteria descriptions (JSON objects or arrays) are serialized with the protocol's canonical() deterministic JSON (compact, object keys sorted) into prompt text — byte-for-byte matching simple-jev's common/prompt_builder.py canonical()",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:03:21.972Z"
+        }
+      ],
+      "nextRuleId": 4,
+      "examples": [
+        {
+          "id": 0,
+          "text": "A request with state \"We were billed twice for March. Please refund the duplicate.\", questions {route: choice(billing/technical), urgency: score(3 levels), refund: noul} and an unknown top-level field stream: true parses cleanly — the unknown field is ignored and all three questions validate",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:04:15.437Z"
+        },
+        {
+          "id": 1,
+          "text": "A request with both state and messages set (or both null) fails with 422 message 'Provide exactly one of state or messages'; state: {} (empty object) with one valid question succeeds",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:04:15.645Z"
+        },
+        {
+          "id": 2,
+          "text": "A messages request with one image part array in content, or a role: 'tool' message, or a 'name' field on a message fails 422 (text-only); options: {raw_logits: true} and a nonempty tools array also fail 422, while empty tools: [] is accepted",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:04:19.889Z"
+        },
+        {
+          "id": 3,
+          "text": "A choice question with 51 criteria keys fails with 422 (param naming the question id); the same question with 50 keys and a noul question whose criteria has only a 'true' key both validate",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:04:20.113Z"
+        }
+      ],
+      "nextExampleId": 4,
+      "attachments": [
+        "spec/attachments/JEV-003/JEV-003-request-schema.md",
+        "spec/attachments/JEV-003/protocol-reference.md",
+        "spec/attachments/JEV-003/ast-research-request-schema.md"
+      ],
+      "estimate": 5,
+      "architectureNotes": [
+        {
+          "id": 0,
+          "text": "New src/server/request.rs (native-only; the whole src/server tree is cfg(not(target_arch=\"wasm32\")) like model_path/router). parse_classifier_request(bytes) -> Result<ClassifierRequest, Vec<RequestError>>: pure, no model/IO. Reuses laya::Question (schema.rs) — the strictness deltas live here (unknown-field rejection via serde deny_unknown_fields on per-type structs, cardinality 2-50, noul true/false-only, context XOR as a post-parse cross-field check, canonical() for non-string entries). Non-string canonical JSON: serde_json with BTreeMap keys (sorted) + to_string (compact) + no escaping beyond JSON basics (ensure_ascii parity via manual escaping of <0x20 only).",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:41:05.797Z"
+        }
+      ],
+      "nextNoteId": 1
+    },
+    "JEV-004": {
+      "id": "JEV-004",
+      "title": "Jev HTTP endpoints: router, classifier + systemone alias, health, openapi, error envelope",
+      "type": "story",
+      "status": "done",
+      "createdAt": "2026-09-22T10:02:13.302Z",
+      "updatedAt": "2026-09-22T22:56:00.860Z",
+      "description": "src/server/router.rs + src/server/handlers/: the axum router (standard router-factory pattern — ServerState Clone-over-Arc state, TraceLayer, route factory) exposing POST /v1/classifier, its exact alias POST /v1/systemone, GET /health, and GET /openapi.json; shared protocol error-envelope builder (422 schema/admission envelope, 429 short form + Retry-After, 499, 500) and body-limit/content-type guards. Card doc: docs/jev-server/JEV-004-http-endpoints.md",
+      "epic": "jev-server",
+      "children": [],
+      "parent": "JEV-002",
+      "dependsOn": [
+        "JEV-005",
+        "JEV-003"
+      ],
+      "userStory": {
+        "role": "protocol client developer",
+        "action": "expose the classifier behind POST /v1/classifier (alias /v1/systemone), GET /health and GET /openapi.json on an axum router",
+        "benefit": "protocol clients can discover and reach the service with standard HTTP semantics and readable error envelopes"
+      },
+      "stateHistory": [
+        {
+          "state": "specifying",
+          "timestamp": "2026-09-22T10:03:00.173Z"
+        },
+        {
+          "state": "testing",
+          "timestamp": "2026-09-22T21:10:22.331Z"
+        },
+        {
+          "state": "implementing",
+          "timestamp": "2026-09-22T22:25:53.646Z"
+        },
+        {
+          "state": "validating",
+          "timestamp": "2026-09-22T22:55:02.663Z"
+        },
+        {
+          "state": "done",
+          "timestamp": "2026-09-22T22:55:45.711Z"
+        }
+      ],
+      "rules": [
+        {
+          "id": 0,
+          "text": "POST /v1/classifier and POST /v1/systemone are the same handler (exact alias, identical behavior and response shape); GET /health returns {\"status\":\"ready\",\"model\":\"<loaded model>\"} without running any inference; GET /openapi.json serves the static OpenAPI 3.1 document of the classifier endpoints",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:03:24.393Z"
+        },
+        {
+          "id": 1,
+          "text": "Every protocol error uses the shared envelope: 422 {error: {message, type: 'invalid_request_error', code: 422, param, details[]}} with up to 10 detail entries (dotted paths, [i] array indices, extra errors folded into the summary message); 429 short form {\"detail\":\"Scoring queue is full\"} with Retry-After: 1; 499 {\"detail\":\"Client disconnected\"}; 500 {\"detail\":\"internal error\"} for unhandled runtime failures (no stable body guaranteed)",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:03:27.828Z"
+        },
+        {
+          "id": 2,
+          "text": "Router-level guards: request bodies over 1 MiB and non-JSON Content-Type are rejected with 422 before JSON parsing; the classifier handler never panics on malformed input (every validation path yields a readable 422/429)",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:03:30.839Z"
+        }
+      ],
+      "nextRuleId": 3,
+      "examples": [
+        {
+          "id": 0,
+          "text": "Sending a mixed choice/score/noul body to POST /v1/systemone returns a byte-equivalent answers/usage shape to POST /v1/classifier; GET /health returns {\"status\":\"ready\",\"model\":\"convaiinnovations/laya\"} without running a forward pass",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:04:25.165Z"
+        },
+        {
+          "id": 1,
+          "text": "A request body of 2 MiB, or a valid JSON body with Content-Type: text/plain, returns the 422 envelope (no JSON parsing happens for the oversized body); a request whose model field is 'other' while the server loaded 'convaiinnovations/laya' returns 422 with message \"Loaded model is 'convaiinnovations/laya'\"",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:04:25.365Z"
+        },
+        {
+          "id": 2,
+          "text": "When the forward pass raises an internal error, the response is 500 with body {\"detail\":\"internal error\"} and the server keeps serving subsequent requests",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:04:29.880Z"
+        }
+      ],
+      "nextExampleId": 3,
+      "attachments": [
+        "spec/attachments/JEV-004/protocol-reference.md",
+        "spec/attachments/JEV-004/architecture.md",
+        "spec/attachments/JEV-004/JEV-004-http-endpoints.md",
+        "spec/attachments/JEV-004/ast-research-http-endpoints.md"
+      ],
+      "estimate": 5,
+      "architectureNotes": [
+        {
+          "id": 0,
+          "text": "Router factory `build_router(state: ServerState) -> Router` in src/server/router.rs: axum 0.8 Router with .route(\"/v1/classifier\", post(classify)).route(\"/v1/systemone\", post(classify)).route(\"/health\", get(health)).route(\"/openapi.json\", get(openapi)).with_state(state).layer(TraceLayer::new_for_http()).layer(DefaultBodyLimit::max(1_048_576)). Mirrors the JEV-002 architecture's build_router factory pattern exactly; ServerState (JEV-005) is the axum State extractor.",
+          "deleted": false,
+          "createdAt": "2026-09-22T21:06:45.240Z"
+        },
+        {
+          "id": 1,
+          "text": "handlers/error.rs owns the protocol error envelope, one place shared by every failure path: 422 {\"error\":{\"message\",\"type\":\"invalid_request_error\",\"code\":422,\"param\",\"details\":[...]}} with up to 10 detail entries (extras folded into the summary message); 429 short form {\"detail\":\"Scoring queue is full\"} + Retry-After: 1 header; 499 {\"detail\":\"Client disconnected\"}; 500 {\"detail\":\"internal error\"}. ExecutionError (JEV-005) and RequestError (JEV-003) are mapped to these by one classifier -> IntoResponse mapping.",
+          "deleted": false,
+          "createdAt": "2026-09-22T21:07:10.376Z"
+        },
+        {
+          "id": 2,
+          "text": "New deps axum 0.8 + tower-http (trace layer only) are native-only, target-gated under the existing cfg(not(target_arch = \"wasm32\")) dependencies block exactly like tokio/ureq/whichlang, so the wasm32-unknown-unknown build stays untouched (wasm_compile test guards this). The classifier handler takes the raw body as bytes; Content-Type sniffing: header absent or application/json (any charset suffix) tolerated, any other JSON-ish content type 422 before parsing. openapi.json is a static in-crate OpenAPI 3.1 string (no codegen dep).",
+          "deleted": false,
+          "createdAt": "2026-09-22T21:07:31.847Z"
+        },
+        {
+          "id": 3,
+          "text": "Classifier handler pipeline: (1) body limit + content-type guards -> 422; (2) parse_classifier_request (JEV-003) -> 422 envelope; (3) model identity: request.model != state.model_name -> 422 message \"Loaded model is '<name>'\"; (4) Context::Messages is converted to a serde_json::Value list of {role, content} objects before executing, Context::State passes through (architecture.md pipeline step 5); (5) state.execute() (JEV-005) -> 200/429/500. Health reads only model_name (no inference, assertable via the mock answerer's forward counter).",
+          "deleted": false,
+          "createdAt": "2026-09-22T21:07:46.578Z"
+        },
+        {
+          "id": 4,
+          "text": "Weight-free tests via axum Router::oneshot with the JEV-005 MockAnswerer: alias byte-equivalence (POST the same mixed body to both routes, assert identical status+body+content-type), health body + zero forwards, 2 MiB body and text/plain content-type 422s (assert forwards()==0), model-mismatch 422 message, fail_once 500 + subsequent 200, openapi.json static document naming both classifier routes + /health. No sockets bound — Router::oneshot keeps the dev-dep tokio feature set minimal.",
+          "deleted": false,
+          "createdAt": "2026-09-22T21:08:01.010Z"
+        }
+      ],
+      "nextNoteId": 5,
+      "iterations": 1
+    },
+    "JEV-005": {
+      "id": "JEV-005",
+      "title": "Laya-native answer mapping, usage accounting, serial execution + 429 admission queue",
+      "type": "story",
+      "status": "done",
+      "createdAt": "2026-09-22T10:02:18.249Z",
+      "updatedAt": "2026-09-22T22:56:07.012Z",
+      "description": "src/server/response.rs + execution layer in src/server/state.rs: map RLAgent::system_one output to the protocol answer shapes (laya-native semantics — native P(true) noul, per-criterion score fields, request-order choice probabilities, act_probability stripped), usage accounting (input_tokens = sum of per-question sequence lengths, output_tokens = 0), pre-inference token/branch admission (422 before any inference), and single-flight model execution behind a bounded 429 admission queue with spawn_blocking offload and disconnect handling. Card doc: docs/jev-server/JEV-005-response-mapping.md",
+      "epic": "jev-server",
+      "children": [],
+      "parent": "JEV-002",
+      "dependsOn": [
+        "JEV-003"
+      ],
+      "userStory": {
+        "role": "server implementer",
+        "action": "map laya's typed answers to the Jev protocol response shape and run the model serially with a bounded queue",
+        "benefit": "responses are numerically faithful to the laya backend contract and the server stays stable under concurrent load"
+      },
+      "stateHistory": [
+        {
+          "state": "specifying",
+          "timestamp": "2026-09-22T10:03:00.372Z"
+        },
+        {
+          "state": "testing",
+          "timestamp": "2026-09-22T12:23:00.607Z"
+        },
+        {
+          "state": "implementing",
+          "timestamp": "2026-09-22T12:23:19.299Z"
+        },
+        {
+          "state": "validating",
+          "timestamp": "2026-09-22T13:12:34.241Z"
+        },
+        {
+          "state": "done",
+          "timestamp": "2026-09-22T13:13:45.415Z"
+        }
+      ],
+      "rules": [
+        {
+          "id": 0,
+          "text": "Laya-native answer mapping: choice answers carry choice/confidence/probabilities with candidate keys in the request's insertion order; score answers carry score (expected zero-based index sum(p[i]*i))/confidence (largest level probability)/probabilities keyed \"0\"..\"N-1\"/legend mapping those keys to the original criteria; noul answers carry ONLY type + noul (the native P(true), no confidence field); the laya act_probability field is stripped from every answer",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:03:33.927Z"
+        },
+        {
+          "id": 1,
+          "text": "usage.input_tokens is the sum of the actual per-question sequence lengths (laya re-tokenizes context per question, so repeated context is counted — matching the reference laya backend), and usage.output_tokens is always 0",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:03:36.067Z"
+        },
+        {
+          "id": 2,
+          "text": "Pre-inference admission (422 before any forward pass): each compiled question sequence must fit min(--max-model-len, checkpoint max_len) — no automatic truncation at the protocol layer; question count must not exceed --max-request-branches (default 100, schema hard cap 256). Overflow or excess is a 422 naming the question id and the cap, and the model is never called",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:03:39.876Z"
+        },
+        {
+          "id": 3,
+          "text": "Serial execution: exactly one model forward at a time (tokio model lock — matching the reference 'requests execute serially against the model'); all parallelism happens within a request (one system_one call over all questions); the synchronous candle forward runs under tokio::task::spawn_blocking, never on an async runtime thread",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:03:43.386Z"
+        },
+        {
+          "id": 4,
+          "text": "Admission queue: one in-flight forward + up to --max-queued (default 16) waiting requests (the reference's 1+16 model); the next request arriving at capacity gets 429 with Retry-After: 1; a client disconnect cancels its queued future, and if a response can still be delivered it is 499 (an in-flight forward cannot be interrupted — the model lock is held until it completes)",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:03:47.508Z"
+        }
+      ],
+      "nextRuleId": 5,
+      "examples": [
+        {
+          "id": 0,
+          "text": "A 200 response for a mixed request contains answers.route {type: choice, choice: 'billing', confidence, probabilities keyed in request order billing/technical — and no act_probability field}, answers.urgency {type: score, score: 1.75, confidence: 0.8, probabilities {\"0\":..,\"1\":..,\"2\":..}, legend {\"0\":\"Routine\",...}}, and answers.refund {type: noul, noul: 0.9}",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:04:29.685Z"
+        },
+        {
+          "id": 1,
+          "text": "For the mixed three-question request above, usage.input_tokens equals the sum of the three per-question tokenized sequence lengths (the shared state text is counted three times) and usage.output_tokens is 0",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:04:34.338Z"
+        },
+        {
+          "id": 2,
+          "text": "With --max-queued 1 and a slow in-flight forward, the third concurrent request receives 429 {\"detail\":\"Scoring queue is full\"} with header Retry-After: 1 while the first two proceed; exactly one forward is ever running at a time (verifiable with an instrumented mock answerer)",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:04:34.574Z"
+        }
+      ],
+      "nextExampleId": 3,
+      "attachments": [
+        "spec/attachments/JEV-005/protocol-reference.md",
+        "spec/attachments/JEV-005/JEV-005-response-mapping.md",
+        "spec/attachments/JEV-005/architecture.md",
+        "spec/attachments/JEV-005/ast-research-jev005-mapping-execution.md"
+      ],
+      "estimate": 5,
+      "architectureNotes": [
+        {
+          "id": 0,
+          "text": "Execution seam: src/server/state.rs defines `pub trait Answerer: Send + Sync { fn system_one(&self, state: &Value, questions: &[(String, Question)]) -> anyhow::Result<Vec<(String, Answer)>>; fn token_lengths(&self, ...) }` (an impl over Arc<RLAgent>); ServerState = Clone newtype over Arc<Inner> { answerer: Arc<dyn Answerer>, model_name, config, model_lock: tokio::sync::Mutex<()>, admission: Semaphore(max_queued) } so build_router (JEV-004) and tests inject mocks weight-free. Mapping: src/server/response.rs `answer_to_jev_json` builds ordered JSON via a Vec of (String, Value) entries serialized manually (the crate's serde_json is BTreeMap-sorted crate-wide by deliberate design, so request-order choice probabilities must not go through a sorted map). Usage: input_tokens = sum of per-question built-sequence lengths computed in the same pre-inference pass that does 422 admission (schema::build_sequence with effective cap), output_tokens = 0. Admission: 422 on marker loss / len cap / branch count BEFORE any forward; then admission semaphore (try-acquire, full => 429 + Retry-After: 1), model_lock, spawn_blocking(system_one).",
+          "deleted": false,
+          "createdAt": "2026-09-22T12:05:21.759Z"
+        }
+      ],
+      "nextNoteId": 1,
+      "iterations": 1
+    },
+    "JEV-006": {
+      "id": "JEV-006",
+      "title": "`laya serve` CLI subcommand: checkpoint load, server lifecycle, graceful shutdown",
+      "type": "story",
+      "status": "done",
+      "createdAt": "2026-09-22T10:02:24.955Z",
+      "updatedAt": "2026-09-23T03:51:15.162Z",
+      "description": "Command::Serve in src/main.rs + start_server/ServerHandle in src/server/ (the start_server/ServerHandle lifecycle pattern from the JEV-002 architecture): load a checkpoint via model_path::resolve (identical precedence to ask/answer), build ServerState, bind TcpListener, run axum::serve with graceful shutdown on ctrl-c/SIGTERM, and expose --host/--port/--max-model-len/--max-request-branches/--max-queued with protocol-matching defaults and clamping. Card doc: docs/jev-server/JEV-006-serve-cli.md",
+      "epic": "jev-server",
+      "children": [],
+      "parent": "JEV-002",
+      "dependsOn": [
+        "JEV-004"
+      ],
+      "userStory": {
+        "role": "ops engineer",
+        "action": "launch the server with one laya serve command and checkpoint flags matching the existing subcommands",
+        "benefit": "deployment is a single static binary with a predictable lifecycle (load, serve, graceful stop)"
+      },
+      "stateHistory": [
+        {
+          "state": "specifying",
+          "timestamp": "2026-09-22T10:03:00.858Z"
+        },
+        {
+          "state": "testing",
+          "timestamp": "2026-09-23T01:50:10.342Z"
+        },
+        {
+          "state": "implementing",
+          "timestamp": "2026-09-23T02:58:56.592Z"
+        },
+        {
+          "state": "validating",
+          "timestamp": "2026-09-23T03:49:18.874Z"
+        },
+        {
+          "state": "done",
+          "timestamp": "2026-09-23T03:51:15.162Z"
+        }
+      ],
+      "rules": [
+        {
+          "id": 0,
+          "text": "laya serve accepts --model DIR | --model-variant KEY [--models-root DIR] (identical precedence to ask/answer via model_path::resolve) and --host (default 127.0.0.1) / --port (default 8000) / --max-model-len (default: checkpoint max_len) / --max-request-branches (100) / --max-queued (16); --max-model-len is clamped to the checkpoint's native max_len",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:03:50.238Z"
+        },
+        {
+          "id": 1,
+          "text": "The model name reported in /health, checked against request.model, and echoed in responses is the value the user supplied at startup (--model path or variant key) — 'the model ID or local path used to start the server' (reference rule); one checkpoint per process, no hot-swap",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:03:53.208Z"
+        },
+        {
+          "id": 2,
+          "text": "Lifecycle (proven axum server-handle pattern): load the checkpoint first (readable stderr progress), then TcpListener::bind, then axum::serve with with_graceful_shutdown on a oneshot; ctrl-c/SIGTERM triggers handle.stop() and in-flight forwards complete before the process exits; bind/load failures exit non-zero before any HTTP is served",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:04:11.658Z"
+        }
+      ],
+      "nextRuleId": 3,
+      "examples": [
+        {
+          "id": 0,
+          "text": "Running `laya serve --port 8000` while another process owns port 8000 fails with a readable bind error before serving anything; running with --max-model-len 4096 against a checkpoint whose native max_len is 1024 silently clamps the effective cap to 1024",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:04:40.694Z"
+        },
+        {
+          "id": 1,
+          "text": "Running `laya serve --model /path/to/laya-typed-decisions --port 8000` loads the checkpoint, prints `laya serving '/path/to/laya-typed-decisions' on http://127.0.0.1:8000`, serves the endpoints, and on Ctrl-C completes any in-flight forward before exiting 0",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:04:40.894Z"
+        },
+        {
+          "id": 2,
+          "text": "Server started with `--model-variant typed-decisions` (no --model): /health returns {\"status\":\"ready\",\"model\":\"typed-decisions\"}; POST /v1/classifier with model field \"other-model\" is rejected 422 with the message naming 'typed-decisions' as the loaded model",
+          "deleted": false,
+          "createdAt": "2026-09-23T01:23:55.211Z"
+        },
+        {
+          "id": 3,
+          "text": "`laya serve --max-queued 0` and `laya serve --max-request-branches -1` each exit non-zero immediately with a clap usage error naming the flag ('invalid value' / '--max-queued must be > 0' style) and NO checkpoint-load progress output — nothing is loaded and no HTTP is ever served",
+          "deleted": false,
+          "createdAt": "2026-09-23T01:24:46.472Z"
+        }
+      ],
+      "nextExampleId": 4,
+      "attachments": [
+        "spec/attachments/JEV-006/JEV-006-serve-cli.md",
+        "spec/attachments/JEV-006/architecture.md",
+        "spec/attachments/JEV-006/protocol-reference.md",
+        "spec/attachments/JEV-006/ast-research-serve-cli.md"
+      ],
+      "estimate": 3,
+      "architectureNotes": [
+        {
+          "id": 0,
+          "text": "start_server(host, model_name, agent: Arc<RLAgent>, config: ServerConfig) -> ServerHandle in src/server/server.rs (per the JEV-002 architecture's start_server/ServerHandle pattern): build ServerState from RealAnswerer(Arc<RLAgent>) + model_name + config, build_router(state), TcpListener::bind(host:port) (0 = ephemeral), oneshot channel, tokio::spawn(axum::serve(listener, app).with_graceful_shutdown(rx.await)), return ServerHandle { port (actual), model_name, shutdown: oneshot::Sender, task: JoinHandle } with async stop() (send + await task). Bind failure -> anyhow error before any HTTP. The 'laya serving <model> on http://host:port' banner is printed by the CLI (main.rs), not start_server.",
+          "deleted": false,
+          "createdAt": "2026-09-22T23:18:26.123Z"
+        },
+        {
+          "id": 1,
+          "text": "Command::Serve in src/main.rs (clap derive, mirroring Ask/Answer flag style): --model (env LAYA_MODEL) | --model-variant (default typed-decisions) + global --models-root, --host (default 127.0.0.1), --port (default 8000), --max-model-len (Option<usize>, default None = checkpoint native max_len), --max-request-branches (default 100), --max-queued (default 16, validator >0), --max-request-branches (validator >0). Model name reported = the user-supplied value: --model path's display, else the variant key. Checkpoint resolution reuses model_path::resolve with identical precedence to ask/answer. RLAgent::load first (stderr progress line), then start_server, then tokio::signal::ctrl_c() -> handle.stop(). max_model_len clamp happens in ServerState::effective_cap (already implemented, JEV-005) — serve just passes the flag through ServerConfig.",
+          "deleted": false,
+          "createdAt": "2026-09-22T23:21:07.283Z"
+        },
+        {
+          "id": 2,
+          "text": "Tests (tests/serve_cli.rs): weight-free, via the real `laya` binary (env CARGO_BIN_EXE_laya) like tests/cli_ask.rs: (a) parse-time rejections — `laya serve --max-queued 0` and `--max-request-branches -1` exit non-zero with a clap usage error before any checkpoint load (assert stderr mentions invalid value, no load progress); (b) port conflict — bind a real TcpListener to an ephemeral port, run `laya serve --port <that> --model <nonexistent-dir>`... no: load happens first, so use a real checkpoint path? Weight-free trick: the CLI loads the checkpoint BEFORE binding, so a missing checkpoint dir exits non-zero with a readable load error before any bind (this covers 'load failures fail cleanly'); the bind conflict needs a loaded model — model-gated (LAYA_TEST_MODEL) alongside the full lifecycle (start, /health round-trip, ctrl-C/stop). (c) clamp is asserted at the config seam: ServerState::effective_cap(mock(1024), ServerConfig{max_model_len: Some(4096)}) == 1024 (JEV-005 code path, JEV-006 flag wiring proven by (a)).",
+          "deleted": false,
+          "createdAt": "2026-09-22T23:22:05.757Z"
+        }
+      ],
+      "nextNoteId": 3
+    },
+    "JEV-007": {
+      "id": "JEV-007",
+      "title": "Jev protocol conformance test suite (mirroring the reference tests)",
+      "type": "story",
+      "status": "done",
+      "createdAt": "2026-09-22T10:02:29.134Z",
+      "updatedAt": "2026-09-23T11:42:05.999Z",
+      "description": "tests/jev_conformance.rs (+ JSON fixtures): HTTP-level conformance suite pinning laya-rs to the Jev/Simple-Jev protocol — weight-free axum oneshot tests against a mock Answerer (validation matrix, alias, health, openapi, 429 queue, 500 recovery) and LAYA_TEST_MODEL-gated real round-trips mirroring simple-jev's test_laya.py contract tests (mixed choice/score/noul, wrong model, overflow, chat history, media rejection, raw_logits rejection, numerical sanity + determinism). Epic quality gate. Card doc: docs/jev-server/JEV-007-conformance.md",
+      "epic": "jev-server",
+      "children": [],
+      "parent": "JEV-002",
+      "dependsOn": [
+        "JEV-006"
+      ],
+      "userStory": {
+        "role": "server implementer",
+        "action": "prove with an automated suite that laya-rs stays protocol-compliant as it evolves",
+        "benefit": "regressions in validation, mapping, or queueing are caught before release, mirroring the reference implementation's own tests"
+      },
+      "stateHistory": [
+        {
+          "state": "specifying",
+          "timestamp": "2026-09-22T10:02:59.977Z"
+        },
+        {
+          "state": "testing",
+          "timestamp": "2026-09-23T05:44:30.878Z"
+        },
+        {
+          "state": "implementing",
+          "timestamp": "2026-09-23T08:22:27.743Z"
+        },
+        {
+          "state": "validating",
+          "timestamp": "2026-09-23T11:36:46.899Z"
+        },
+        {
+          "state": "done",
+          "timestamp": "2026-09-23T11:42:05.999Z"
+        }
+      ],
+      "examples": [
+        {
+          "id": 0,
+          "text": "With LAYA_TEST_MODEL pointing at a real checkpoint, the conformance suite asserts: the mixed choice/score/noul round-trip returns protocol-shaped answers (no act_probability, noul without confidence), the wrong-model request 422s, an over-long state 422s without invoking the model, and two identical requests return byte-identical answers (determinism)",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:04:45.875Z"
+        },
+        {
+          "id": 1,
+          "text": "The suite runs `cargo test` with no checkpoint and no GPU: the weight-free scenarios (validation matrix, alias, health, openapi shape, 429 with a blocking mock, 500 recovery) all pass, and the LAYA_TEST_MODEL-gated scenarios are skipped (not failed) when the env var is unset",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:04:46.073Z"
+        },
+        {
+          "id": 2,
+          "text": "Weight-free validation-matrix run (no checkpoint, no GPU): the suite 422s context XOR (both state+messages set), an over-1MiB body, and a non-JSON content-type without any forward pass; it accepts a body carrying unknown top-level fields (stream/temperature) with 200; it 422s a request whose question count exceeds --max-request-branches; with --max-queued 1 and a blocking mock forward in flight, the second concurrent request gets 429 {\"detail\":\"Scoring queue is full\"} + Retry-After: 1; and after a mock forward error returns 500 {\"detail\":\"internal error\"} the next request succeeds (the server stays up)",
+          "deleted": false,
+          "createdAt": "2026-09-23T05:37:41.170Z"
+        }
+      ],
+      "nextExampleId": 3,
+      "attachments": [
+        "spec/attachments/JEV-007/protocol-reference.md",
+        "spec/attachments/JEV-007/JEV-007-conformance.md",
+        "spec/attachments/JEV-007/ast-research-conformance-suite.md"
+      ],
+      "rules": [
+        {
+          "id": 0,
+          "text": "Weight-free tier: all validation-matrix, alias, health, openapi, 429-queue, and 500-recovery scenarios run on a plain `cargo test` with no checkpoint and no GPU (axum Router::oneshot against a mock Answerer); model-gated scenarios (real round-trips, determinism, numerical sanity) run only under LAYA_TEST_MODEL and are skipped — not failed — when the env var is unset (the repo's established gating convention)",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:08:52.084Z"
+        },
+        {
+          "id": 1,
+          "text": "The scenario list mirrors the reference suites: contract tier (from test_laya.py) — mixed batch round-trip, alias, health, wrong model, context overflow without inference, branch limit, chat history, media/tool rejection, raw_logits rejection, reserved-field acceptance; validation matrix (from test_api.py + request_schema) — context XOR, unknown top-level tolerance, unknown question fields, type discriminator, criteria cardinality, noul key restriction, empty question id, state type checks, malformed JSON, oversized body, content-type, 429, 500 recovery; numerical sanity (model-gated) — probabilities sum, confidence=max, score range, noul range, determinism",
+          "deleted": false,
+          "createdAt": "2026-09-22T10:09:03.169Z"
+        }
+      ],
+      "nextRuleId": 2,
+      "estimate": 5,
+      "architectureNotes": [
+        {
+          "id": 0,
+          "text": "Suite layout: tests/jev_conformance.rs (one integration test binary) + tests/jev_conformance/*.json fixtures (mixed_fixture.json reuses the README refund example, chat_history.json, wrong_model.json). Two tiers per the card doc: (1) weight-free — build_router(ServerState::new(mock Answerer, ...)) driven by tower::ServiceExt::oneshot, no sockets, mirroring the helper style already established in tests/router_endpoints.rs (req/take/assert_422_envelope helpers are re-implemented here, not shared — each test file is self-contained by repo convention); (2) model-gated — start_server(Arc::new(RealAnswerer::new(Arc::new(RLAgent::load(dir)))), port 0) + the bare-TcpStream HTTP round-trip helper pattern from tests/serve_cli.rs (dev-deps carry no HTTP client; adding one is out of scope).",
+          "deleted": false,
+          "createdAt": "2026-09-23T05:35:33.053Z"
+        },
+        {
+          "id": 1,
+          "text": "Conformance finding (model-gated tier, real checkpoint): the protocol requires choice/score `confidence` = the largest candidate/criterion probability (protocol-reference.md \"Answer field rules\"; reference test_laya.py asserts confidence == max probability), but the JEV-005 mapping passed through laya::Answer's internal entropy-based confidence (metrics::confidence_from_probs, `1 - H/ln k`). Real-checkpoint run emitted confidence 0.303 vs max probability 0.812. Fix (implementation of this card's quality gate): answer_to_jev_json now DERIVES confidence from the probabilities (winning candidate for choice, max for score) instead of passing the Answer field through; the CLI's native answer_to_json (entropy metric) is untouched. All 19 test binaries + the LAYA_TEST_MODEL-gated conformance scenarios pass after the fix; no new clippy warnings introduced (the 3 push_str(':') in response.rs and the `/** header doc-comment warnings are pre-existing/established convention).",
+          "deleted": false,
+          "createdAt": "2026-09-23T11:31:24.301Z"
+        }
+      ],
+      "nextNoteId": 2
+    }
+  },
+  "states": {
+    "backlog": [],
+    "specifying": [],
+    "testing": [],
+    "implementing": [],
+    "validating": [],
+    "done": [
+      "INFER-001",
+      "INFER-002",
+      "INFER-003",
+      "INFER-004",
+      "ROUTE-001",
+      "TRAIN-001",
+      "CHECK-001",
+      "CHECK-002",
+      "INFER-005",
+      "TRAIN-003",
+      "INFER-006",
+      "TRAIN-002",
+      "INFER-007",
+      "JEV-003",
+      "JEV-005",
+      "JEV-004",
+      "JEV-006",
+      "JEV-007",
+      "JEV-002"
+    ],
+    "blocked": []
+  },
+  "prefixCounters": {
+    "INFER": 7,
+    "TRAIN": 3,
+    "ROUTE": 1,
+    "CHECK": 2,
+    "JEV": 8
+  }
+}

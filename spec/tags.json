@@ -1,0 +1,96 @@
+{
+  "categories": [
+    {
+      "name": "Phase Tags",
+      "description": "Phase identification tags",
+      "required": true,
+      "tags": []
+    },
+    {
+      "name": "Component Tags",
+      "description": "Architectural component tags",
+      "required": true,
+      "tags": [
+        {
+          "name": "@checkpoint-management",
+          "description": "Checkpoint Management bounded context (resolution + download)"
+        },
+        {
+          "name": "@decision-inference",
+          "description": "Decision Inference bounded context (CLI ask/answer/demo, RLAgent, wasm, schema)"
+        },
+        {
+          "name": "@jev-server",
+          "description": "JEV Protocol HTTP Server bounded context (laya-rs axum server speaking the open Jev/Simple-Jev classifier protocol)"
+        },
+        {
+          "name": "@language-routing",
+          "description": "Language Routing bounded context (script detector + whichlang)"
+        },
+        {
+          "name": "@training-calibration",
+          "description": "Training and Calibration bounded context (RLCD training loop + temperature fitting)"
+        }
+      ]
+    },
+    {
+      "name": "Feature Group Tags",
+      "description": "Functional area tags",
+      "required": true,
+      "tags": [
+        {
+          "name": "@decision-engine",
+          "description": "Features answering typed questions against a state (CLI, library, wasm)"
+        }
+      ]
+    },
+    {
+      "name": "Technical Tags",
+      "description": "Technical concern tags",
+      "required": false,
+      "tags": []
+    },
+    {
+      "name": "Platform Tags",
+      "description": "Platform-specific tags",
+      "required": false,
+      "tags": []
+    },
+    {
+      "name": "Priority Tags",
+      "description": "Implementation priority tags",
+      "required": false,
+      "tags": []
+    },
+    {
+      "name": "Status Tags",
+      "description": "Development status tags",
+      "required": false,
+      "tags": [
+        {
+          "name": "@done",
+          "description": "Feature fully specified, tested, and mapped"
+        },
+        {
+          "name": "@wip",
+          "description": "Work-in-progress feature"
+        }
+      ]
+    },
+    {
+      "name": "Testing Tags",
+      "description": "Test-related tags",
+      "required": false,
+      "tags": []
+    },
+    {
+      "name": "Automation Tags",
+      "description": "Automation integration tags",
+      "required": false,
+      "tags": []
+    }
+  ],
+  "statistics": {
+    "lastUpdated": "2026-09-22T10:07:43.742Z"
+  }
+}

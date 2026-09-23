@@ -1,0 +1,71 @@
+{
+  "epics": {
+    "decision-inference": {
+      "id": "decision-inference",
+      "title": "Decision Inference",
+      "createdAt": "2026-09-21T23:28:38.921Z",
+      "description": "Answering choice/score/noul typed questions against a state in a single bidirectional forward pass (CLI ask/answer/demo + RLAgent + wasm WasmAgent)",
+      "workUnits": [
+        "INFER-001",
+        "INFER-002",
+        "INFER-003",
+        "INFER-004",
+        "INFER-005",
+        "INFER-006",
+        "INFER-007"
+      ]
+    },
+    "language-routing": {
+      "id": "language-routing",
+      "title": "Language Routing",
+      "createdAt": "2026-09-21T23:29:59.431Z",
+      "description": "Deterministic script- + language-based routing that picks the English vs multilingual laya checkpoint for a state's text",
+      "workUnits": [
+        "ROUTE-001"
+      ]
+    },
+    "checkpoint-management": {
+      "id": "checkpoint-management",
+      "title": "Checkpoint Management",
+      "createdAt": "2026-09-21T23:30:03.882Z",
+      "description": "Checkpoint-directory resolution (explicit path, family root, cached download) and atomic Hugging Face downloads into the XDG cache",
+      "workUnits": [
+        "CHECK-001",
+        "CHECK-002"
+      ]
+    },
+    "training-calibration": {
+      "id": "training-calibration",
+      "title": "Training and Calibration",
+      "createdAt": "2026-09-21T23:30:05.949Z",
+      "description": "RLCD training (REINFORCE with Gaussian exploration, GRPO-style group baseline, TD(λ) episodes) over JSONL datasets, plus per-(question-type, option-count) temperature fitting",
+      "workUnits": [
+        "TRAIN-001",
+        "TRAIN-002",
+        "TRAIN-003"
+      ]
+    },
+    "distribution": {
+      "id": "distribution",
+      "title": "Distribution",
+      "createdAt": "2026-09-21T23:33:18.332Z",
+      "description": "Release pipeline: platform archives (incl. CUDA flash-attn), crates.io, Homebrew, signed apt and pacman repositories"
+    },
+    "jev-server": {
+      "id": "jev-server",
+      "title": "JEV",
+      "createdAt": "2026-09-22T09:55:54.834Z",
+      "description": "Jev/Simple-Jev protocol HTTP server: serve laya checkpoints behind the open Jev classifier contract (POST /v1/classifier, /v1/systemone alias, GET /health) with strict v1 request validation, laya-native answer mapping, single-flight model execution with admission queue, protocol error envelopes, and end-to-end conformance tests",
+      "workUnits": [
+        "JEV-001",
+        "JEV-002",
+        "JEV-003",
+        "JEV-004",
+        "JEV-005",
+        "JEV-006",
+        "JEV-007",
+        "JEV-008"
+      ]
+    }
+  }
+}

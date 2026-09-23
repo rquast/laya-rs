@@ -32,6 +32,109 @@ inference time:
 Comparison against the reference `jev` API and a `gliner` baseline on a typed-decisions fixture:
 https://gist.github.com/framp/82a9973988cc41a8b552cb7850b70259
 
+## Serving
+
+`laya` can run as a standalone HTTP server exposing the open [Jev/Simple-Jev v1
+classifier](docs/jev-server/protocol-reference.md) protocol — a checkpoint, a
+listener, and a handful of endpoints:
+
+```bash
+laya serve
+```
+
+With no arguments this downloads the default `typed-decisions` checkpoint into
+`~/.cache/laya-rs` on first use, loads it, and binds `127.0.0.1:8000`. Point it
+at a specific checkpoint with `--model` (a local directory) or pick a different
+variant with `--model-variant multilingual`. The model name the server reports
+and that clients must echo in each request's `model` field is the value you
+supplied — the variant key (default `typed-decisions`) or the `--model` path.
+
+```bash
+# serve the default (English) checkpoint on 127.0.0.1:8000
+laya serve
+
+# serve a specific local checkpoint directory, on all interfaces, port 9000
+laya serve --model /path/to/laya-typed-decisions --host 0.0.0.0 --port 9000
+```
+
+| Endpoint | Description |
+| --- | --- |
+| `POST /v1/classifier` | Answer a batch of typed questions against one state or chat history |
+| `POST /v1/systemone` | Exact alias of `/v1/classifier` |
+| `GET /health` | `{"status":"ready","model":"<loaded model>"}` — readiness, no inference |
+| `GET /openapi.json` | The OpenAPI 3.1 spec for the endpoints above |
+
+Questions execute **serially** against the model: one forward in flight plus a
+bounded admission queue (16 waiting slots by default). A request that finds the
+queue full gets a `429` with a `Retry-After` header rather than being dropped.
+Each request is capped at 100 questions and a 1 MiB body. Ctrl-C or SIGTERM
+shuts down gracefully — the listener stops accepting, in-flight forwards run to
+completion, then the process exits.
+
+A full request/response:
+
+```bash
+curl -s http://127.0.0.1:8000/v1/classifier \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "typed-decisions",
+    "state": "We were billed twice for March. Please refund the duplicate.",
+    "questions": {
+      "intent": {
+        "type": "choice",
+        "instructions": "What does the customer want?",
+        "criteria": { "refund": "money back", "cancel": "end the account", "other": null }
+      },
+      "urgency": {
+        "type": "score",
+        "instructions": "How urgent is this?",
+        "criteria": [ "not urgent", "soon", "blocking" ]
+      }
+    }
+  }'
+```
+
+```json
+{
+  "model": "typed-decisions",
+  "answers": {
+    "intent": {
+      "type": "choice",
+      "choice": "refund",
+      "confidence": 0.82,
+      "probabilities": { "refund": 0.82, "cancel": 0.07, "other": 0.11 }
+    },
+    "urgency": {
+      "type": "score",
+      "score": 1.66,
+      "confidence": 0.72,
+      "probabilities": { "0": 0.06, "1": 0.23, "2": 0.72 },
+      "legend": { "0": "not urgent", "1": "soon", "2": "blocking" }
+    }
+  },
+  "usage": { "input_tokens": 78, "output_tokens": 0 }
+}
+```
+
+`state` accepts a string, a JSON object, or a JSON array; `messages` accepts a
+text-only chat history (`role` + `content`) as an alternative — send exactly one
+of the two. The three question types (`choice`, `score`, `noul`) and the full
+`422` error envelope (`error.details[]`) are documented in
+[`docs/jev-server/`](docs/jev-server/).
+
+`laya serve` options:
+
+| Flag | Env | Default | Description |
+| --- | --- | --- | --- |
+| `--model <DIR>` | `LAYA_MODEL` | — | A local checkpoint directory, bypassing `--model-variant`/`--models-root` |
+| `--model-variant <KEY>` | — | `typed-decisions` | Which checkpoint to use when `--model` isn't given |
+| `--models-root <DIR>` | `LAYA_MODELS_ROOT` | — | Root of a checkpoint family, checked before downloading |
+| `--host <ADDR>` | — | `127.0.0.1` | Bind address |
+| `--port <N>` | — | `8000` | Bind port |
+| `--max-model-len <N>` | `LAYA_MAX_MODEL_LEN` | checkpoint `max_len` | Per-question sequence cap (clamped to the checkpoint's native max) |
+| `--max-request-branches <N>` | `LAYA_MAX_REQUEST_BRANCHES` | `100` | Max questions per request |
+| `--max-queued <N>` | `LAYA_MAX_QUEUED` | `16` | Admission-queue depth on top of the in-flight forward |
+
 ## Installation
 
 macOS (Apple Silicon) and Linux, via Homebrew:
@@ -88,6 +191,72 @@ No macOS Intel build: only Apple Silicon (`aarch64-apple-darwin`) and Linux
 
 See [`packaging/README.md`](packaging/README.md) for how these packages are
 built and published.
+
+## Library
+
+`cargo add laya-rs` pulls in the `laya` crate (native target; the `wasm32-unknown-unknown`
+target instead exposes `laya::wasm::WasmAgent`, the same interface wrapped for
+`wasm-bindgen` — see `website/src/lib/laya.ts` for how the browser demo drives it). The
+surface is small: load an [`RLAgent`](src/agent.rs) from a checkpoint directory, build typed
+[`Question`](src/schema.rs)s, and get back typed [`Answer`](src/agent.rs)s.
+
+```rust
+use serde_json::json;
+use laya::{Answer, QType, Question, RLAgent};
+
+fn main() -> anyhow::Result<()> {
+    // A checkpoint directory downloaded from Hugging Face (convaiinnovations/laya,
+    // -typed-decisions, or -multilingual) — rl_agent_config.json, tokenizer/, encoder/, model.safetensors.
+    let agent = RLAgent::load("/path/to/laya-typed-decisions")?;
+
+    let state = json!("We were billed twice for March. Please refund the duplicate.");
+    let question = Question {
+        qtype: QType::Choice,
+        instructions: "What does the customer want?".to_string(),
+        choice_criteria: vec![
+            ("refund".to_string(), None),
+            ("cancel".to_string(), None),
+            ("other".to_string(), None),
+        ],
+        score_criteria: vec![],
+        noul_true: None,
+        noul_false: None,
+    };
+
+    // Batched: pass as many (id, Question) pairs as you like in one forward pass.
+    let answers = agent.system_one(&state, &[("intent".to_string(), question)])?;
+    for (id, answer) in answers {
+        match answer {
+            Answer::Choice { choice, probabilities, confidence, act_probability } => {
+                println!("{id}: {choice} (confidence={confidence:.3}, act_p={act_probability:.3})");
+                for (option, p) in probabilities {
+                    println!("    {option}: {p:.3}");
+                }
+            }
+            Answer::Score { score, confidence, .. } => println!("{id}: {score:.2} (confidence={confidence:.3})"),
+            Answer::Noul { noul, .. } => println!("{id}: {noul:.3}"),
+        }
+    }
+    Ok(())
+}
+```
+
+`Answer` is a plain enum, not `Serialize` — `laya::agent::answer_to_json` turns one into the
+same `{"type": "choice"|"score"|"noul", ...}` JSON shape the CLI's `answer` subcommand and the
+wasm bindings emit, if that's more convenient than matching on it directly.
+
+Other pieces of the public API, all optional depending on what you need:
+
+- `laya::route` / `laya::Checkpoint` — the English-vs-multilingual language router, so you can
+  pick a checkpoint from a state string before loading (native only; not exposed to wasm since
+  the browser demo picks a checkpoint from the UI instead).
+- `laya::model_path` / `laya::download` — the CLI's own checkpoint resolution: given a variant
+  key, find it under a local family root or fetch it into `~/.cache/laya-rs` (native only).
+- `RLAgent::load_from_bytes` — the same load path as `RLAgent::load`, but from in-memory file
+  contents instead of a filesystem path (what the wasm bindings use, since there's no filesystem
+  in a browser tab).
+- `laya::RlcdConfig` / `laya::Trainer` — the RLCD training loop (`Trainer::load` +
+  `Trainer::train_step`/`train_jsonl`), for fine-tuning a checkpoint rather than just running it.
 
 ## Performance
 
@@ -164,6 +333,10 @@ laya answer input.json answers.json --model-dir /path/to/laya-typed-decisions
 # answer a jev-questions-style batch file ({section: {state, questions}}) —
 # scripts/jev_batch.py drives `laya answer` once per section
 scripts/jev_batch.py questions.json answers.json --model-dir /path/to/laya-typed-decisions
+
+# serve the Jev/Simple-Jev v1 protocol (POST /v1/classifier, GET /health, ...)
+laya serve                                    # default checkpoint, 127.0.0.1:8000
+laya serve --model /path/to/laya --port 9000 # explicit checkpoint + port
 
 # RLCD training over a JSONL dataset
 laya train /path/to/laya dataset.jsonl --epochs 3

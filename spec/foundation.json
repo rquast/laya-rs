@@ -1,0 +1,307 @@
+{
+  "version": "2.0.0",
+  "project": {
+    "name": "laya-rs",
+    "vision": "A from-scratch Rust (candle) reimplementation of Laya's sub-35ms, non-autoregressive \"System 1\" decision engine: give it a state (text, email, ticket, or JSON) and typed questions (choice/score/noul), and it returns typed answers with calibrated probabilities in a single bidirectional forward pass — no text generation, nothing to parse, nothing to hallucinate — usable as a CLI, a Rust library, and in the browser via wasm.",
+    "projectType": "library"
+  },
+  "problemSpace": {
+    "primaryProblem": {
+      "title": "Typed-decision inference with no Python, no autoregression, and no parseable free text",
+      "description": "Rust developers and other non-Python users want Laya's sub-35ms, non-autoregressive \"System 1\" typed-decision inference (choice/score/noul answers with calibrated probabilities in a single bidirectional forward pass) but the reference implementation is a Python/PyTorch stack: heavyweight to depend on, and unusable where Python isn't available — static CLI binaries, Rust services, or a browser tab. LLM-based classification is a poor substitute: it's autoregressive, generates free text that must be parsed into typed answers, can hallucinate invalid options, and answering a whole question battery against one document costs many generated tokens. A native reimplementation of the published laya checkpoint family (ModernBERT encoder + decision head) on candle, with no PyTorch/Python at inference time, removes all of that.",
+      "impact": "high"
+    }
+  },
+  "solutionSpace": {
+    "overview": "laya-rs reimplements the full Laya stack natively in Rust on candle: a config-driven ModernBERT encoder (RoPE with per-layer-type theta, alternating global/sliding-window attention, GeGLU MLP), a from-scratch vectorized decision head (type embedding, 2-layer transformer, option-marker scoring, act head), a typed-question schema builder matching the original's sequence layout, per-(question-type, option-count) temperature calibration, an RLCD training loop (REINFORCE with Gaussian exploration + GRPO-style group-mean baseline over the same strictly-proper scoring rule), and script- + language-based routing between the English and multilingual checkpoints. It ships as the laya CLI (ask/answer/train), a Rust library, wasm-bindgen bindings for an in-browser demo, and signed distro packages (Homebrew, apt, pacman, archives, crates.io).",
+    "capabilities": [
+      {
+        "name": "Typed Decision Inference",
+        "description": "Answer choice/score/noul questions against a state (text or JSON) in a single bidirectional forward pass, returning typed answers with calibrated probabilities and an act probability"
+      },
+      {
+        "name": "Language Checkpoint Routing",
+        "description": "Determine from the state text which checkpoint can actually read it — a fast Unicode script detector plus statistical language ID — and route to the English or multilingual laya checkpoint before inference, so an English-only model can never be confidently wrong on an unreadable script"
+      },
+      {
+        "name": "Checkpoint Loading and Download",
+        "description": "Load a published laya checkpoint from disk or in-memory bytes, with a deterministic resolution order (explicit path, family-root subfolder, cached Hugging Face download) and atomic, resume-safe downloads into the XDG cache"
+      },
+      {
+        "name": "RLCD Training and Calibration",
+        "description": "Train (fine-tune) the decision model over a JSONL dataset with RLCD: REINFORCE updates with Gaussian-noise exploration and a group-mean baseline over the strictly-proper scoring rule, TD(lambda) bootstrapping for multi-turn episodes, and an act-head auxiliary loss; plus post-hoc per-(question-type, option-count) temperature fitting for calibration"
+      }
+    ]
+  },
+  "personas": [
+    {
+      "name": "Rust Developer",
+      "description": "Runs the `laya` CLI (ask/answer/train) or depends on the `laya-rs` crate from a Rust service",
+      "goals": [
+        "Typed-decision inference without a Python/PyTorch dependency",
+        "Fast batch answering of typed question batteries against documents",
+        "Reproducible, packageable deployment (Homebrew/apt/pacman/archives/crates.io)"
+      ]
+    },
+    {
+      "name": "End User (browser demo)",
+      "description": "Uses the in-browser playground on the laya-rs website to build choice/score/noul questions against a document and see typed answers instantly, without installing anything",
+      "goals": [
+        "Try the decision engine interactively in the browser (wasm)",
+        "Inspect per-option probabilities and confidence for each question"
+      ]
+    },
+    {
+      "name": "ML Engineer",
+      "description": "Fine-tunes laya checkpoints on their own JSONL datasets (single-turn records and multi-turn episodes) and calibrates output probabilities before deployment",
+      "goals": [
+        "Domain-adapt the model with `laya train` over a JSONL dataset",
+        "Fit per-(question-type, option-count) temperatures to cut expected calibration error"
+      ]
+    }
+  ],
+  "eventStorm": {
+    "level": "big_picture",
+    "items": [
+      {
+        "id": 1,
+        "type": "bounded_context",
+        "text": "Decision Inference",
+        "color": null,
+        "deleted": false,
+        "createdAt": "2026-09-21T23:11:34.055Z"
+      },
+      {
+        "id": 2,
+        "type": "bounded_context",
+        "text": "Language Routing",
+        "color": null,
+        "deleted": false,
+        "createdAt": "2026-09-21T23:11:48.685Z"
+      },
+      {
+        "id": 3,
+        "type": "bounded_context",
+        "text": "Checkpoint Management",
+        "color": null,
+        "deleted": false,
+        "createdAt": "2026-09-21T23:11:48.983Z"
+      },
+      {
+        "id": 4,
+        "type": "bounded_context",
+        "text": "Distribution",
+        "color": null,
+        "deleted": false,
+        "createdAt": "2026-09-21T23:11:49.254Z"
+      },
+      {
+        "id": 5,
+        "type": "bounded_context",
+        "text": "Training and Calibration",
+        "color": null,
+        "deleted": false,
+        "createdAt": "2026-09-21T23:11:49.447Z"
+      },
+      {
+        "id": 6,
+        "type": "aggregate",
+        "text": "ModernBertEncoder",
+        "boundedContextId": 1,
+        "color": "yellow",
+        "deleted": false,
+        "createdAt": "2026-09-21T23:12:01.626Z"
+      },
+      {
+        "id": 7,
+        "type": "aggregate",
+        "text": "DecisionHead",
+        "boundedContextId": 1,
+        "color": "yellow",
+        "deleted": false,
+        "createdAt": "2026-09-21T23:12:01.937Z"
+      },
+      {
+        "id": 8,
+        "type": "aggregate",
+        "text": "RLAgent",
+        "boundedContextId": 1,
+        "color": "yellow",
+        "deleted": false,
+        "createdAt": "2026-09-21T23:12:02.186Z"
+      },
+      {
+        "id": 9,
+        "type": "aggregate",
+        "text": "Question",
+        "boundedContextId": 1,
+        "color": "yellow",
+        "deleted": false,
+        "createdAt": "2026-09-21T23:12:02.430Z"
+      },
+      {
+        "id": 10,
+        "type": "aggregate",
+        "text": "VariantDef",
+        "boundedContextId": 3,
+        "color": "yellow",
+        "deleted": false,
+        "createdAt": "2026-09-21T23:12:15.725Z"
+      },
+      {
+        "id": 11,
+        "type": "aggregate",
+        "text": "Release",
+        "boundedContextId": 4,
+        "color": "yellow",
+        "deleted": false,
+        "createdAt": "2026-09-21T23:12:16.024Z"
+      },
+      {
+        "id": 12,
+        "type": "aggregate",
+        "text": "Trainer",
+        "boundedContextId": 5,
+        "color": "yellow",
+        "deleted": false,
+        "createdAt": "2026-09-21T23:12:16.266Z"
+      },
+      {
+        "id": 13,
+        "type": "aggregate",
+        "text": "Record",
+        "boundedContextId": 5,
+        "color": "yellow",
+        "deleted": false,
+        "createdAt": "2026-09-21T23:12:16.483Z"
+      },
+      {
+        "id": 14,
+        "type": "aggregate",
+        "text": "ScriptDetector",
+        "boundedContextId": 2,
+        "color": "yellow",
+        "deleted": false,
+        "createdAt": "2026-09-21T23:12:16.690Z"
+      },
+      {
+        "id": 15,
+        "type": "aggregate",
+        "text": "ModelPathResolver",
+        "boundedContextId": 3,
+        "color": "yellow",
+        "deleted": false,
+        "createdAt": "2026-09-21T23:12:16.874Z"
+      },
+      {
+        "id": 16,
+        "type": "event",
+        "text": "CheckpointResolved",
+        "boundedContextId": 3,
+        "color": "orange",
+        "deleted": false,
+        "createdAt": "2026-09-21T23:12:28.748Z"
+      },
+      {
+        "id": 17,
+        "type": "event",
+        "text": "QuestionAnswered",
+        "boundedContextId": 1,
+        "color": "orange",
+        "deleted": false,
+        "createdAt": "2026-09-21T23:12:29.069Z"
+      },
+      {
+        "id": 18,
+        "type": "event",
+        "text": "QuestionSequenceBuilt",
+        "boundedContextId": 1,
+        "color": "orange",
+        "deleted": false,
+        "createdAt": "2026-09-21T23:12:29.252Z"
+      },
+      {
+        "id": 19,
+        "type": "event",
+        "text": "ProbabilitiesCalibrated",
+        "boundedContextId": 1,
+        "color": "orange",
+        "deleted": false,
+        "createdAt": "2026-09-21T23:12:29.493Z"
+      },
+      {
+        "id": 20,
+        "type": "event",
+        "text": "StateRouted",
+        "boundedContextId": 2,
+        "color": "orange",
+        "deleted": false,
+        "createdAt": "2026-09-21T23:12:29.731Z"
+      },
+      {
+        "id": 21,
+        "type": "event",
+        "text": "CheckpointDownloaded",
+        "boundedContextId": 3,
+        "color": "orange",
+        "deleted": false,
+        "createdAt": "2026-09-21T23:12:29.948Z"
+      },
+      {
+        "id": 22,
+        "type": "command",
+        "text": "RouteStateToCheckpoint",
+        "boundedContextId": 2,
+        "color": "blue",
+        "deleted": false,
+        "createdAt": "2026-09-21T23:12:42.267Z"
+      },
+      {
+        "id": 23,
+        "type": "command",
+        "text": "TrainModel",
+        "boundedContextId": 5,
+        "color": "blue",
+        "deleted": false,
+        "createdAt": "2026-09-21T23:12:42.589Z"
+      },
+      {
+        "id": 24,
+        "type": "command",
+        "text": "FitTemperatures",
+        "boundedContextId": 5,
+        "color": "blue",
+        "deleted": false,
+        "createdAt": "2026-09-21T23:12:42.831Z"
+      },
+      {
+        "id": 25,
+        "type": "command",
+        "text": "ResolveCheckpoint",
+        "boundedContextId": 3,
+        "color": "blue",
+        "deleted": false,
+        "createdAt": "2026-09-21T23:12:43.077Z"
+      },
+      {
+        "id": 26,
+        "type": "command",
+        "text": "AnswerQuestionBatch",
+        "boundedContextId": 1,
+        "color": "blue",
+        "deleted": false,
+        "createdAt": "2026-09-21T23:12:43.322Z"
+      },
+      {
+        "id": 27,
+        "type": "command",
+        "text": "AskSingleQuestion",
+        "boundedContextId": 1,
+        "color": "blue",
+        "deleted": false,
+        "createdAt": "2026-09-21T23:12:43.509Z"
+      }
+    ],
+    "nextItemId": 28
+  }
+}
