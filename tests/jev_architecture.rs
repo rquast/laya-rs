@@ -24,11 +24,11 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use axum::http::{Method, Request, StatusCode};
-use laya::schema::{QType, Question};
-use laya::server::router::build_router;
-use laya::server::state::{AdmissionError, Answerer, ServerConfig, ServerState};
-use laya::server::start_server;
-use laya::Answer;
+use rlcd::schema::{QType, Question};
+use rlcd::server::router::build_router;
+use rlcd::server::state::{AdmissionError, Answerer, ServerConfig, ServerState};
+use rlcd::server::start_server;
+use rlcd::Answer;
 use serde_json::{json, Value};
 use tower::ServiceExt;
 
@@ -137,9 +137,9 @@ fn http(host_port: &str, method: &str, path: &str, body: Option<&str>) -> Option
     Some((status, body.to_string()))
 }
 
-/// Scenario: A Jev-protocol client completes the quickstart against the laya server
+/// Scenario: A Jev-protocol client completes the quickstart against the rlcd server
 #[tokio::test]
-async fn a_jev_protocol_client_completes_the_quickstart_against_the_laya_server() {
+async fn a_jev_protocol_client_completes_the_quickstart_against_the_rlcd_server() {
     // @step Given the server is running with a loaded laya checkpoint and its /health endpoint reporting the model name
     // (weight-free stand-in for "a loaded laya checkpoint": the `Answerer`
     //  seam — the documented architecture's testability property — reports
@@ -314,7 +314,7 @@ fn the_epic_decomposes_into_ordered_child_stories() {
         "strict-jev-classifier-request-schema-parse-validate.feature",
         "laya-native-answer-mapping-usage-accounting-serial-execution-429-admission-queue.feature",
         "jev-http-endpoints-router-classifier-systemone-alias-health-openapi-error-envelope.feature",
-        "laya-serve-cli-subcommand-checkpoint-load-server-lifecycle-graceful-shutdown.feature",
+        "rlcd-serve-cli-subcommand-checkpoint-load-server-lifecycle-graceful-shutdown.feature",
         "jev-protocol-conformance-test-suite-mirroring-the-reference-tests.feature",
     ] {
         assert!(

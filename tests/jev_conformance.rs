@@ -4,7 +4,7 @@
  * This test file validates the acceptance criteria defined in the feature file.
  * Scenarios map directly to Gherkin scenarios.
  *
- * HTTP-level conformance suite pinning laya-rs to the Jev/Simple-Jev protocol
+ * HTTP-level conformance suite pinning rlcd-rs to the Jev/Simple-Jev protocol
  * contract, mirroring simple-jev's own test_laya.py (contract) + test_api.py
  * (validation) suites - the jev-server epic's quality gate (JEV-007).
  *
@@ -35,11 +35,11 @@ use axum::body::Body;
 use axum::http::header;
 use axum::http::{HeaderMap, Method, Request, StatusCode};
 use axum::Router;
-use laya::schema::{QType, Question};
-use laya::server::router::build_router;
-use laya::server::state::{AdmissionError, Answerer, RealAnswerer, ServerConfig, ServerState};
-use laya::server::{start_server, ServerHandle};
-use laya::{Answer, RLAgent};
+use rlcd::schema::{QType, Question};
+use rlcd::server::router::build_router;
+use rlcd::server::state::{AdmissionError, Answerer, RealAnswerer, ServerConfig, ServerState};
+use rlcd::server::{start_server, ServerHandle};
+use rlcd::{Answer, RLAgent};
 use serde_json::{json, Value};
 use tower::ServiceExt;
 

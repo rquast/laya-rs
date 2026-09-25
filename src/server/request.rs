@@ -212,7 +212,7 @@ pub fn parse_classifier_request(bytes: &[u8]) -> Result<ClassifierRequest, Vec<R
         None => errors.push(err("questions", "missing_field", "questions is required")),
     }
 
-    // options: {raw_logits: bool}. raw_logits=true is rejected — the laya
+    // options: {raw_logits: bool}. raw_logits=true is rejected — the rlcd
     // backend has no raw-logit diagnostics; unknown options fields are rejected.
     if let Some(v) = obj.get("options") {
         if v.is_null() {

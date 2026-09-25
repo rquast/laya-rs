@@ -37,7 +37,7 @@ child cards' test suites, not by new code.
 
 ### 1.4 "Protocol layer never imports candle types; touches RLAgent only at system_one"
 - `src/server/request.rs`, `src/server/response.rs` — pure over
-  `serde_json::Value` / `laya::Answer` (no candle imports; request.rs is pure
+  `serde_json::Value` / `rlcd::Answer` (no candle imports; request.rs is pure
   over `&[u8]`, response.rs serializes `Answer` to the protocol shape).
 - `src/server/state.rs:54` — `pub trait Answerer: Send + Sync` (the seam);
   `RealAnswerer` (state.rs:220) wraps `Arc<RLAgent>` and is the only place
@@ -68,7 +68,7 @@ child cards' test suites, not by new code.
 
 - `cargo test` (all 19 test binaries) green, LAYA_TEST_MODEL unset
   (model-gated scenarios skip, not fail).
-- `LAYA_TEST_MODEL=~/.cache/laya-rs/laya-typed-decisions cargo test --test
+- `LAYA_TEST_MODEL=~/.cache/rlcd-rs/laya-typed-decisions cargo test --test
   jev_conformance` green (real-checkpoint round-trips, incl. numerical
   sanity after the confidence=max-probability fix in answer_to_jev_json).
 - `cargo clippy --all-targets`: no new warnings from the jev-server code

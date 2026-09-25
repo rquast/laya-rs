@@ -16,7 +16,7 @@ Executes only when no `ask`/`answer`/`train` subcommand was parsed.
    - `department`: choice {billing, technical, sales} with criteria descriptions.
    - `urgency`: score [not urgent, soon, blocking].
    - `churn_risk`: noul.
-7. `agent.system_one(&state, &questions)` then a `match` over `laya::Answer` prints:
+7. `agent.system_one(&state, &questions)` then a `match` over `rlcd::Answer` prints:
    - `Choice` → `{qid}: choice={choice} confidence={confidence:.4} act_p={act_probability:.4}` + indented `{k}: {v:.4}`.
    - `Score` → `{qid}: score={score:.4} confidence={confidence:.4} act_p={act_probability:.4}` + indented legend lines.
    - `Noul` → `{qid}: noul={noul:.4} act_p={act_probability:.4}`.

@@ -4,9 +4,9 @@
  * This test file validates the acceptance criteria defined in the feature file.
  * Scenarios map directly to Gherkin scenarios.
  *
- * `laya::model_path::resolve` and `laya::download` are native-only (the
+ * `rlcd::model_path::resolve` and `rlcd::download` are native-only (the
  * `wasm32` target has neither). Cache-directory scenarios mutate
- * XDG_CACHE_HOME / LAYA_OFFLINE, which are process-global: they hold
+ * XDG_CACHE_HOME / RLCD_OFFLINE, which are process-global: they hold
  * ENV_LOCK so the parallel test threads never see another test's env.
  */
 
@@ -46,7 +46,7 @@ fn make_checkpoint(dir: &Path) {
 }
 
 fn tmp_root(name: &str) -> PathBuf {
-    std::env::temp_dir().join(format!("laya-check-{name}-{}", std::process::id()))
+    std::env::temp_dir().join(format!("rlcd-check-{name}-{}", std::process::id()))
 }
 
 /// Scenario: An explicit checkpoint path is used as-is
@@ -59,7 +59,7 @@ fn an_explicit_checkpoint_path_is_used_as_is() {
     std::fs::create_dir_all(&explicit).unwrap();
 
     // @step When the resolver runs with that explicit path
-    let resolved = laya::model_path::resolve(
+    let resolved = rlcd::model_path::resolve(
         "typed-decisions",
         Some(explicit.clone()),
         Some("typed-decisions"),
@@ -84,7 +84,7 @@ fn a_family_root_subfolder_is_preferred_over_the_cache() {
     std::fs::write(sub.join("model.safetensors"), b"").unwrap();
 
     // @step When the resolver resolves the typed-decisions variant without an explicit path
-    let resolved = laya::model_path::resolve("typed-decisions", None, Some("typed-decisions"), Some(&root))
+    let resolved = rlcd::model_path::resolve("typed-decisions", None, Some("typed-decisions"), Some(&root))
         .expect("family root must resolve");
 
     // @step Then it returns the family-root subfolder
@@ -100,13 +100,13 @@ fn a_complete_cache_is_used_without_a_download() {
     // @step Given a cache directory holding all five checkpoint files for the variant
     let cache = tmp_root("cache-complete");
     set_env("XDG_CACHE_HOME", Some(cache.to_str().unwrap()));
-    set_env("LAYA_OFFLINE", None);
-    let variant_dir = cache.join("laya-rs").join("laya-typed-decisions");
+    set_env("RLCD_OFFLINE", None);
+    let variant_dir = cache.join("rlcd-rs").join("laya-typed-decisions");
     make_checkpoint(&variant_dir);
 
     // @step When the resolver resolves without an explicit path or family root
     let resolved =
-        laya::download::download_variant(laya::model_path::find("typed-decisions").unwrap())
+        rlcd::download::download_variant(rlcd::model_path::find("typed-decisions").unwrap())
             .expect("complete cache must resolve without a download");
 
     // @step Then it returns the cache directory and no file is downloaded
@@ -120,22 +120,22 @@ fn a_complete_cache_is_used_without_a_download() {
 fn a_missing_cache_file_offline_is_a_clear_error() {
     let _guard = env_lock();
 
-    // @step Given an empty cache with LAYA_OFFLINE set
+    // @step Given an empty cache with RLCD_OFFLINE set
     let cache = tmp_root("cache-offline");
     std::fs::create_dir_all(&cache).unwrap();
     set_env("XDG_CACHE_HOME", Some(cache.to_str().unwrap()));
-    set_env("LAYA_OFFLINE", Some("1"));
+    set_env("RLCD_OFFLINE", Some("1"));
 
     // @step When the resolver resolves the variant
-    let err = laya::download::download_variant(laya::model_path::find("multilingual").unwrap())
+    let err = rlcd::download::download_variant(rlcd::model_path::find("multilingual").unwrap())
         .expect_err("offline with an empty cache must fail");
 
-    // @step Then it fails with an error that names LAYA_OFFLINE and --model
+    // @step Then it fails with an error that names RLCD_OFFLINE and --model
     let msg = format!("{err:?}");
-    assert!(msg.contains("LAYA_OFFLINE"), "error should name LAYA_OFFLINE: {msg}");
+    assert!(msg.contains("RLCD_OFFLINE"), "error should name RLCD_OFFLINE: {msg}");
     assert!(msg.contains("--model"), "error should name --model: {msg}");
     set_env("XDG_CACHE_HOME", None);
-    set_env("LAYA_OFFLINE", None);
+    set_env("RLCD_OFFLINE", None);
     let _ = std::fs::remove_dir_all(&cache);
 }
 
@@ -146,7 +146,7 @@ fn an_unknown_variant_key_is_an_error() {
     let key = "does-not-exist";
 
     // @step When the resolver resolves it
-    let err = laya::model_path::resolve("typed-decisions", None, Some(key), None)
+    let err = rlcd::model_path::resolve("typed-decisions", None, Some(key), None)
         .expect_err("unknown variant must fail");
 
     // @step Then it fails with an unknown-variant error

@@ -22,7 +22,7 @@
 /// Scenario: The crate compiles for the browser target
 #[test]
 fn the_crate_compiles_for_the_browser_target() {
-    // @step Given the laya library with its pure-Rust tokenizers backend
+    // @step Given the rlcd library with its pure-Rust tokenizers backend
     // The backend is fixed in Cargo.toml: `tokenizers` with the `unstable_wasm`
     // (pure-Rust `fancy-regex`) feature, never the C-linked `onig` default.
     // Nothing to do here — this step asserts the precondition the build below

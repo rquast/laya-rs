@@ -1,12 +1,12 @@
 /**
- * Feature: spec/features/laya-serve-cli-subcommand-checkpoint-load-server-lifecycle-graceful-shutdown.feature
+ * Feature: spec/features/rlcd-serve-cli-subcommand-checkpoint-load-server-lifecycle-graceful-shutdown.feature
  *
  * This test file validates the acceptance criteria defined in the feature file.
  * Scenarios map directly to Gherkin scenarios.
  *
  * Two tiers (repo convention):
  * - Weight-free: parse-time flag rejection and clean load failure via the real
- *   `laya` binary (CARGO_BIN_EXE_laya, or LAYA_TEST_BINARY), the
+ *   `rlcd` binary (CARGO_BIN_EXE_rlcd, or RLCD_TEST_BINARY), the
  *   `--max-model-len` clamp at the `ServerState` seam (mock `Answerer` — no
  *   checkpoint, no GPU), and the `start_server` lifecycle (ephemeral port,
  *   /health round-trip, stop()) behind the `Answerer` seam.
@@ -22,15 +22,15 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use laya::schema::{QType, Question};
-use laya::server::server::start_server;
-use laya::server::state::{AdmissionError, Answerer, ServerConfig, ServerState};
-use laya::Answer;
+use rlcd::schema::{QType, Question};
+use rlcd::server::server::start_server;
+use rlcd::server::state::{AdmissionError, Answerer, ServerConfig, ServerState};
+use rlcd::Answer;
 use serde_json::{json, Value};
 
-fn laya_bin() -> String {
-    std::env::var("LAYA_TEST_BINARY")
-        .unwrap_or_else(|_| env!("CARGO_BIN_EXE_laya").to_string())
+fn rlcd_bin() -> String {
+    std::env::var("RLCD_TEST_BINARY")
+        .unwrap_or_else(|_| env!("CARGO_BIN_EXE_rlcd").to_string())
 }
 
 fn model_dir() -> Option<String> {
@@ -163,17 +163,17 @@ fn free_port() -> u16 {
     TcpListener::bind("127.0.0.1:0").expect("bind ephemeral").local_addr().expect("local addr").port()
 }
 
-/// Spawn `laya serve` against the LAYA_TEST_MODEL checkpoint on a free port
+/// Spawn `rlcd serve` against the LAYA_TEST_MODEL checkpoint on a free port
 /// (with the models root pointed at a nonexistent dir so nothing can
 /// download), and wait for /health.
 fn spawn_serve(model: &str, port: u16) -> std::process::Child {
-    let child = Command::new(laya_bin())
+    let child = Command::new(rlcd_bin())
         .args(["serve", "--model", model, "--port", &port.to_string()])
         .env("LAYA_MODELS_ROOT", "/nonexistent")
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .expect("spawn laya serve");
+        .expect("spawn rlcd serve");
     let health = wait_for_health(&format!("127.0.0.1:{port}"), Duration::from_secs(180));
     match health {
         Some(_) => child,
@@ -193,7 +193,7 @@ async fn serve_loads_the_checkpoint_and_serves_on_the_requested_port() {
     let supplied_model = "/path/to/laya-typed-decisions".to_string();
     let answerer: Arc<dyn Answerer> = Arc::new(MockAnswerer::new((1024, 128), 0));
 
-    // @step When the user runs `laya serve --model /path/to/laya-typed-decisions --port 8000`
+    // @step When the user runs `rlcd serve --model /path/to/laya-typed-decisions --port 8000`
     // (seam: `start_server` with port 0 = an ephemeral stand-in for the
     //  requested port; the CLI half below serves on a real requested port)
     let handle = start_server("127.0.0.1", 0, answerer, supplied_model.clone(), ServerConfig::default())
@@ -201,7 +201,7 @@ async fn serve_loads_the_checkpoint_and_serves_on_the_requested_port() {
         .expect("start_server on an ephemeral port");
     assert!(handle.port != 0, "the handle must report the actually-bound port");
 
-    // @step Then the checkpoint loads with stderr progress, the server prints `laya serving '/path/to/laya-typed-decisions' on http://127.0.0.1:8000`, and /health reports that model name
+    // @step Then the checkpoint loads with stderr progress, the server prints `rlcd serving '/path/to/laya-typed-decisions' on http://127.0.0.1:8000`, and /health reports that model name
     // (seam half: /health reports the supplied model name; the load progress
     //  line and the banner are asserted in the model-gated half)
     let (status, body) = http(&format!("127.0.0.1:{}", handle.port), "GET", "/health", None)
@@ -235,7 +235,7 @@ async fn serve_loads_the_checkpoint_and_serves_on_the_requested_port() {
     let stderr = String::from_utf8_lossy(&out.stderr);
     assert!(stderr.contains("loading"), "stderr must report checkpoint load progress: {stderr}");
     assert!(stderr.contains(&model), "load progress must name the checkpoint: {stderr}");
-    assert!(stderr.contains("laya serving"), "the startup banner must be printed: {stderr}");
+    assert!(stderr.contains("rlcd serving"), "the startup banner must be printed: {stderr}");
     assert!(
         stderr.contains(&format!("http://127.0.0.1:{port}")),
         "the banner must name the listen address: {stderr}"
@@ -249,17 +249,17 @@ fn port_conflicts_and_load_failures_fail_cleanly_before_serving() {
     // (weight-free half first — it needs no checkpoint at all: the CLI loads
     //  before binding, so a missing dir fails at load, never at bind)
     let missing = "/definitely/not/a/real/checkpoint/dir";
-    let out = Command::new(laya_bin())
+    let out = Command::new(rlcd_bin())
         .args(["serve", "--model", missing, "--port", "0"])
         .output()
-        .expect("run laya serve");
+        .expect("run rlcd serve");
     assert!(!out.status.success(), "a missing checkpoint must fail");
     let stderr = String::from_utf8_lossy(&out.stderr);
     assert!(
         stderr.contains(missing),
         "the load error must name the checkpoint (readable): {stderr}"
     );
-    assert!(!stderr.contains("laya serving"), "nothing may be served after a load failure: {stderr}");
+    assert!(!stderr.contains("rlcd serving"), "nothing may be served after a load failure: {stderr}");
 
     let model = match model_dir() {
         Some(dir) => dir,
@@ -271,12 +271,12 @@ fn port_conflicts_and_load_failures_fail_cleanly_before_serving() {
     let listener = TcpListener::bind("127.0.0.1:0").expect("bind the conflict port");
     let port = listener.local_addr().expect("local addr").port();
 
-    // @step When the user runs `laya serve --port 8000`
-    let out = Command::new(laya_bin())
+    // @step When the user runs `rlcd serve --port 8000`
+    let out = Command::new(rlcd_bin())
         .args(["serve", "--model", &model, "--port", &port.to_string()])
         .env("LAYA_MODELS_ROOT", "/nonexistent")
         .output()
-        .expect("run laya serve");
+        .expect("run rlcd serve");
 
     // @step Then the command fails with a readable bind error, no HTTP is served, and the process exits non-zero
     assert!(
@@ -289,7 +289,7 @@ fn port_conflicts_and_load_failures_fail_cleanly_before_serving() {
         stderr.to_lowercase().contains("bind"),
         "the error must name the bind failure: {stderr}"
     );
-    assert!(!stderr.contains("laya serving"), "no HTTP may be served on a conflicting port: {stderr}");
+    assert!(!stderr.contains("rlcd serving"), "no HTTP may be served on a conflicting port: {stderr}");
 }
 
 /// Scenario: The effective sequence cap clamps to the checkpoint's native max_len
@@ -299,7 +299,7 @@ async fn the_effective_sequence_cap_clamps_to_the_checkpoints_native_max_len() {
     let mock = Arc::new(MockAnswerer::new((1024, 128), 0));
     let answerer: Arc<dyn Answerer> = mock.clone();
 
-    // @step When the user runs `laya serve --max-model-len 4096`
+    // @step When the user runs `rlcd serve --max-model-len 4096`
     // (the flag is passed straight through `ServerConfig`; the clamp is the
     //  `ServerState` seam (JEV-005) this card wires up — the flag's own
     //  parse-time acceptance is exercised by the parse-time tests)
@@ -419,18 +419,18 @@ async fn ctrl_c_stops_the_server_gracefully() {
 #[test]
 fn invalid_serve_flags_are_rejected_at_parse_time() {
     // @step Given the flags --max-queued 0 or --max-request-branches -1
-    // @step When the user runs `laya serve`
+    // @step When the user runs `rlcd serve`
     for (flag, value) in [("--max-queued", "0"), ("--max-request-branches", "-1")] {
-        let out = Command::new(laya_bin())
+        let out = Command::new(rlcd_bin())
             .args(["serve", flag, value])
             .output()
-            .expect("run laya serve");
+            .expect("run rlcd serve");
 
         // @step Then clap rejects the flags with a usage error before any checkpoint is loaded
         assert!(!out.status.success(), "{flag} {value} must be rejected at parse time");
         let stderr = String::from_utf8_lossy(&out.stderr);
         assert!(stderr.contains(flag), "the usage error must name the flag: {stderr}");
-        assert!(!stderr.contains("laya serving"), "nothing may be served: {stderr}");
+        assert!(!stderr.contains("rlcd serving"), "nothing may be served: {stderr}");
         assert!(!stderr.contains("loading"), "no checkpoint may be loaded: {stderr}");
     }
 }

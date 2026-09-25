@@ -144,7 +144,7 @@ impl RLAgent {
     }
 
     pub fn system_one(&self, state: &Value, questions: &[(String, Question)]) -> anyhow::Result<Vec<(String, Answer)>> {
-        let debug_timing = std::env::var("LAYA_TIMING").is_ok();
+        let debug_timing = std::env::var("RLCD_TIMING").is_ok();
         let t_tok = crate::timing::Instant::now();
         let mut all_ids = Vec::with_capacity(questions.len());
         let mut all_markers = Vec::with_capacity(questions.len());
@@ -227,7 +227,7 @@ impl RLAgent {
     }
 }
 
-/// `laya answer`'s and the wasm binding's shared output shape: `{"type": "choice"|"score"|"noul", ...}`.
+/// `rlcd answer`'s and the wasm binding's shared output shape: `{"type": "choice"|"score"|"noul", ...}`.
 pub fn answer_to_json(answer: Answer) -> Value {
     match answer {
         Answer::Choice { choice, probabilities, confidence, act_probability } => json!({

@@ -1,6 +1,6 @@
 use candle_core::{DType, Device, Tensor};
-use laya::modernbert::ModernBertConfig;
-use laya::decision_model::DecisionModel;
+use rlcd::modernbert::ModernBertConfig;
+use rlcd::decision_model::DecisionModel;
 use candle_nn::VarBuilder;
 use std::time::Instant;
 

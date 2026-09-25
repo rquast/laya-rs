@@ -4,8 +4,8 @@
  * This test file validates the acceptance criteria defined in the feature file.
  * Scenarios map directly to Gherkin scenarios.
  *
- * The `laya` binary is located via CARGO_BIN_EXE_laya (cargo sets it for
- * integration tests) or LAYA_TEST_BINARY. Scenarios that need a real
+ * The `rlcd` binary is located via CARGO_BIN_EXE_rlcd (cargo sets it for
+ * integration tests) or RLCD_TEST_BINARY. Scenarios that need a real
  * checkpoint gate on LAYA_TEST_MODEL (checkpoint directory); without it they
  * are skipped — model weights are not bundled in the repository.
  */
@@ -13,9 +13,9 @@
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-fn laya_bin() -> String {
-    std::env::var("LAYA_TEST_BINARY")
-        .unwrap_or_else(|_| env!("CARGO_BIN_EXE_laya").to_string())
+fn rlcd_bin() -> String {
+    std::env::var("RLCD_TEST_BINARY")
+        .unwrap_or_else(|_| env!("CARGO_BIN_EXE_rlcd").to_string())
 }
 
 fn model_dir() -> Option<String> {
@@ -30,7 +30,7 @@ impl TmpDir {
             .duration_since(UNIX_EPOCH)
             .expect("time")
             .as_nanos();
-        let d = std::env::temp_dir().join(format!("laya-answer-test-{n}"));
+        let d = std::env::temp_dir().join(format!("rlcd-answer-test-{n}"));
         std::fs::create_dir_all(&d).expect("temp dir");
         Self(d.to_string_lossy().to_string())
     }
@@ -73,11 +73,11 @@ fn answer_mixed_batch_writes_typed_answers() {
     // @step Given an input file contains a state and three questions: a choice with options billing/technical/sales, a score with three levels, and a noul
     let _ = &input;
 
-    // @step When the user runs `laya answer input.json answers.json --model /path/to/laya-typed-decisions`
-    let out = Command::new(laya_bin())
+    // @step When the user runs `rlcd answer input.json answers.json --model /path/to/laya-typed-decisions`
+    let out = Command::new(rlcd_bin())
         .args(["answer", &input, &output, "--model", &model])
         .output()
-        .expect("failed to run laya");
+        .expect("failed to run rlcd");
 
     // @step Then answers.json is written as pretty JSON with one entry per question id — the choice entry has choice/confidence/act_probability/probabilities, the score entry has score/legend/probabilities, and the noul entry has noul/act_probability
     assert!(out.status.success(), "stderr: {}", String::from_utf8_lossy(&out.stderr));
@@ -113,11 +113,11 @@ fn missing_state_field_is_an_error() {
     // @step Given an input file contains questions but no `state` field
     let _ = &input;
 
-    // @step When the user runs `laya answer input.json answers.json`
-    let out = Command::new(laya_bin())
+    // @step When the user runs `rlcd answer input.json answers.json`
+    let out = Command::new(rlcd_bin())
         .args(["answer", &input, &output, "--model", &model])
         .output()
-        .expect("failed to run laya");
+        .expect("failed to run rlcd");
 
     // @step Then the command fails with a `missing state` error and no answers file is written
     assert!(!out.status.success());
@@ -152,11 +152,11 @@ fn only_restricts_batch_to_one_question() {
     // @step Given an input file contains a state and several questions including one with id `churn_risk`
     let _ = &input;
 
-    // @step When the user runs `laya answer input.json answers.json --model /path/to/laya-typed-decisions --only churn_risk`
-    let out = Command::new(laya_bin())
+    // @step When the user runs `rlcd answer input.json answers.json --model /path/to/laya-typed-decisions --only churn_risk`
+    let out = Command::new(rlcd_bin())
         .args(["answer", &input, &output, "--model", &model, "--only", "churn_risk"])
         .output()
-        .expect("failed to run laya");
+        .expect("failed to run rlcd");
 
     // @step Then answers.json contains exactly one entry, for question id `churn_risk`
     assert!(out.status.success(), "stderr: {}", String::from_utf8_lossy(&out.stderr));
@@ -178,11 +178,11 @@ fn malformed_input_file_is_a_parse_error() {
     // @step Given an input file contains invalid JSON (not an object)
     let _ = &input;
 
-    // @step When the user runs `laya answer bad.json answers.json --model /path/to/laya-typed-decisions`
-    let out = Command::new(laya_bin())
+    // @step When the user runs `rlcd answer bad.json answers.json --model /path/to/laya-typed-decisions`
+    let out = Command::new(rlcd_bin())
         .args(["answer", &input, &output, "--model", "/nonexistent/model-dir"])
         .output()
-        .expect("failed to run laya");
+        .expect("failed to run rlcd");
 
     // @step Then the command fails before any checkpoint is loaded, with a JSON parse error, and no answers file is written
     assert!(!out.status.success());

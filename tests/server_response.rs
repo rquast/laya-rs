@@ -5,7 +5,7 @@
  * Scenarios map directly to Gherkin scenarios.
  *
  * All scenarios are weight-free: the answer mapping is pure over hand-built
- * `laya::Answer` values; execution/queue semantics run against a mock
+ * `rlcd::Answer` values; execution/queue semantics run against a mock
  * `Answerer` (no checkpoint, no GPU); and the sequence admission is
  * exercised against the real `schema::build_sequence` with the in-memory
  * WordLevel tokenizer pattern from tests/schema.rs (special tokens:
@@ -16,12 +16,12 @@ use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
 
-use laya::schema::{serialize_state, QType, Question, SpecialTokens};
-use laya::server::response::{answer_to_jev_json, ClassifierResponse, Usage};
-use laya::server::state::{
+use rlcd::schema::{serialize_state, QType, Question, SpecialTokens};
+use rlcd::server::response::{answer_to_jev_json, ClassifierResponse, Usage};
+use rlcd::server::state::{
     admit_questions, AdmissionError, Answerer, ExecutionError, ServerConfig, ServerState,
 };
-use laya::Answer;
+use rlcd::Answer;
 use serde_json::json;
 use tokenizers::models::wordlevel::WordLevel;
 use tokenizers::pre_tokenizers::whitespace::Whitespace;

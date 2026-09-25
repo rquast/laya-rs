@@ -11,7 +11,7 @@ pub mod router;
 pub use router::{route, Checkpoint};
 ```
 
-Native-only — the browser demo picks its checkpoint from the model picker instead (website/src/lib/models.ts).
+Native-only — the browser (cdylib) path picks its checkpoint directly instead.
 
 ## `Checkpoint` (src/router.rs:14-18)
 
@@ -74,6 +74,6 @@ deterministic on all native targets.
 ## Testability
 
 Fully weight-free and deterministic. `route` and `Checkpoint` are re-exported from the
-lib (`laya::route`, `laya::Checkpoint`), so integration tests can call them directly.
+lib (`rlcd::route`, `rlcd::Checkpoint`), so integration tests can call them directly.
 Native-only: tests must be gated to `cfg(not(target_arch = "wasm32"))` or run via the
 native test harness only (cargo test defaults are native — no gate needed for `cargo test`).

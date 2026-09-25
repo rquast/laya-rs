@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Batch-answer a jev-questions-style file ({section: {state, questions}}).
 
-`laya answer` (the Rust binary) only understands a single state plus its
+`rlcd answer` (the Rust binary) only understands a single state plus its
 questions (`{"state": ..., "questions": {qid: {...}}}`) in, and
 `{qid: {...answer}}` out — it has no idea what a "section" is. This script
 is the multi-section batch driver that used to live in the binary itself: it
-calls `laya answer` once per section and assembles the results into
-`{section: {qid: {...answer}}}`, matching what `laya jev` used to write
+calls `rlcd answer` once per section and assembles the results into
+`{section: {qid: {...answer}}}`, matching what `rlcd jev` used to write
 directly.
 """
 
@@ -20,11 +20,11 @@ from pathlib import Path
 
 def find_default_binary() -> str:
     repo_root = Path(__file__).resolve().parent.parent
-    for candidate in ("target/release/laya", "target/debug/laya"):
+    for candidate in ("target/release/rlcd", "target/debug/rlcd"):
         path = repo_root / candidate
         if path.is_file():
             return str(path)
-    return "laya"
+    return "rlcd"
 
 
 def main() -> None:
@@ -34,7 +34,7 @@ def main() -> None:
     parser.add_argument("--model-dir", default="/mnt/extra/ai/laya/typed-decisions")
     parser.add_argument("--only", help="restrict every section to one question id")
     parser.add_argument(
-        "--binary", default=None, help="path to the laya binary (default: auto-detect a build, else 'laya' on PATH)"
+        "--binary", default=None, help="path to the rlcd binary (default: auto-detect a build, else 'rlcd' on PATH)"
     )
     args = parser.parse_args()
 

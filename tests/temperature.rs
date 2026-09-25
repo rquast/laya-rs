@@ -9,8 +9,8 @@
  * no scenario is gated or skipped.
  */
 
-use laya::schema::QType;
-use laya::train::{fit_temperature, fit_temperatures};
+use rlcd::schema::QType;
+use rlcd::train::{fit_temperature, fit_temperatures};
 
 /// Scenario: Two-option samples share one bucket temperature
 #[test]

@@ -6,10 +6,10 @@ this card and summarized from the sources listed at its end).
 
 ## Goal
 
-`laya serve` runs a Rust HTTP server so that any Jev-protocol client — the featherless
+`rlcd serve` runs a Rust HTTP server so that any Jev-protocol client — the featherless
 simple-jev clients, MCP servers that target `/v1/classifier`, or TypeSafe's native
 `{state, questions}` shape — can send a `ClassifierRequest` and receive the standard
-`{model, answers, usage}` response, backed by laya-rs's native candle inference instead
+`{model, answers, usage}` response, backed by rlcd-rs's native candle inference instead
 of the Python/PyTorch simple-jev `--backend laya` (which is the existing reference
 implementation this project replaces).
 
@@ -25,7 +25,7 @@ implementation this project replaces).
 
 ## Server stack
 
-A small, local, axum-based HTTP server inside the `laya` CLI binary:
+A small, local, axum-based HTTP server inside the `rlcd` CLI binary:
 
 | Concern | Choice |
 | --- | --- |
@@ -146,14 +146,14 @@ All protocol errors share one JSON envelope (matches the reference's 422/429/499
 
 ## Checkpoint & model identity
 
-- `laya serve --model DIR | --model-variant KEY | --models-root DIR` reuses
+- `rlcd serve --model DIR | --model-variant KEY | --models-root DIR` reuses
   `model_path::resolve` (CHECK-001) verbatim; the **model name reported in
   responses and checked against `request.model`** is the explicit flag value the
   user passed (or the variant key), exactly as the reference matches
   "the model ID or local path used to start the server".
 - One checkpoint per process (the reference does not hot-swap models).
 - Optional `--auto-route` (later child card, out of scope here): pick
-  English vs multilingual per request via `laya::route` — deferred because the
+  English vs multilingual per request via `rlcd::route` — deferred because the
   protocol's model-identity rule (one loaded model, strict match) makes a
   per-request router awkward; documented as a known limitation.
 
@@ -175,7 +175,7 @@ All protocol errors share one JSON envelope (matches the reference's 422/429/499
 | JEV-003 | Strict Jev classifier request schema (parse + validate, 422 rules) | `jev-classifier-request-schema` |
 | JEV-004 | HTTP router, `/v1/classifier`, `/v1/systemone`, `/health`, `/openapi.json`, error envelope middleware | `jev-http-endpoints` |
 | JEV-005 | Laya-native answer mapping, usage accounting, serial execution + 429 admission queue | `jev-response-mapping` |
-| JEV-006 | `laya serve` CLI subcommand: checkpoint load, server lifecycle, graceful shutdown | `laya-serve-cli` |
+| JEV-006 | `rlcd serve` CLI subcommand: checkpoint load, server lifecycle, graceful shutdown | `rlcd-serve-cli` |
 | JEV-007 | Protocol conformance test suite (HTTP-level, mirroring the reference tests) | `jev-protocol-conformance` |
 
 Dependency order: JEV-003 → JEV-005 → JEV-004 → JEV-006 → JEV-007

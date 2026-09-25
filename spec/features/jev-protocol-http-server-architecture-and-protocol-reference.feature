@@ -18,15 +18,15 @@ Feature: Jev protocol HTTP server: architecture and protocol reference
   #   4. Implementation is decomposed into the children JEV-003 (request schema) → JEV-005 (mapping/execution) → JEV-004 (endpoints) → JEV-006 (CLI) → JEV-007 (conformance gate); each child carries its own feature file and card doc under docs/jev-server/
   #
   # EXAMPLES:
-  #   1. A simple-jev Python client pointed at the laya-rs server (base URL swapped) completes its quickstart: GET /v1/models-style discovery via /health, then POST /v1/classifier with the red-bicycle example returns a choice answer with probabilities and a zero output-token usage block
+  #   1. A simple-jev Python client pointed at the rlcd-rs server (base URL swapped) completes its quickstart: GET /v1/models-style discovery via /health, then POST /v1/classifier with the red-bicycle example returns a choice answer with probabilities and a zero output-token usage block
   #
   # ========================================
   Background: User Story
     As a developer or ops engineer self-hosting typed decision serving
-    I want to run a Rust HTTP server speaking the open Jev/Simple-Jev classifier protocol, backed by laya-rs native inference instead of the Python/PyTorch simple-jev Laya backend
+    I want to run a Rust HTTP server speaking the open Jev/Simple-Jev classifier protocol, backed by rlcd-rs native inference instead of the Python/PyTorch simple-jev Laya backend
     So that any Jev-protocol client can use my self-hosted, sub-35ms laya checkpoint without a Python runtime
 
-  Scenario: A Jev-protocol client completes the quickstart against the laya server
+  Scenario: A Jev-protocol client completes the quickstart against the rlcd server
     Given the server is running with a loaded laya checkpoint and its /health endpoint reporting the model name
     When a simple-jev client sends GET /health then POST /v1/classifier with the red-bicycle choice example
     Then /health returns {"status":"ready","model":"<model>"} and the classifier returns a choice answer with probabilities and a usage block whose output_tokens is 0

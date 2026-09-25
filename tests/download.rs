@@ -4,12 +4,12 @@
  * This test file validates the acceptance criteria defined in the feature file.
  * Scenarios map directly to Gherkin scenarios.
  *
- * `laya::download` is native-only (`#[cfg(not(target_arch = "wasm32"))]`).
- * Cache-directory scenarios mutate XDG_CACHE_HOME / LAYA_OFFLINE, which are
+ * `rlcd::download` is native-only (`#[cfg(not(target_arch = "wasm32"))]`).
+ * Cache-directory scenarios mutate XDG_CACHE_HOME / RLCD_OFFLINE, which are
  * process-global: they hold ENV_LOCK so parallel test threads never see
  * another test's env. The fresh-cache scenario downloads the real checkpoint
  * (several hundred MB) from Hugging Face, so it only runs when
- * LAYA_TEST_DOWNLOAD is set.
+ * RLCD_TEST_DOWNLOAD is set.
  */
 
 use std::path::{Path, PathBuf};
@@ -29,7 +29,7 @@ fn set_env(key: &str, val: Option<&str>) {
 }
 
 fn tmp_root(name: &str) -> PathBuf {
-    std::env::temp_dir().join(format!("laya-dl-{name}-{}", std::process::id()))
+    std::env::temp_dir().join(format!("rlcd-dl-{name}-{}", std::process::id()))
 }
 
 /// The five files a complete checkpoint holds (mirrors `REQUIRED_FILES`).
@@ -51,29 +51,29 @@ fn make_checkpoint(dir: &Path, marker: &str) {
     }
 }
 
-fn variant(key: &str) -> &'static laya::model_path::VariantDef {
-    laya::model_path::find(key).unwrap()
+fn variant(key: &str) -> &'static rlcd::model_path::VariantDef {
+    rlcd::model_path::find(key).unwrap()
 }
 
 /// Scenario: A fresh cache downloads all five files
 #[test]
 fn a_fresh_cache_downloads_all_five_files() {
     // @step Given a cache directory without the typed-decisions checkpoint
-    if std::env::var("LAYA_TEST_DOWNLOAD").is_err() {
+    if std::env::var("RLCD_TEST_DOWNLOAD").is_err() {
         return; // skipped: real download (hundreds of MB) requires opt-in
     }
     let _guard = env_lock();
     let cache = tmp_root("fresh");
     let _ = std::fs::remove_dir_all(&cache);
     set_env("XDG_CACHE_HOME", Some(cache.to_str().unwrap()));
-    set_env("LAYA_OFFLINE", None);
+    set_env("RLCD_OFFLINE", None);
 
-    // @step When I request the typed-decisions variant download over the network (opt-in via LAYA_TEST_DOWNLOAD; the real checkpoint is several hundred MB)
-    let resolved = laya::download::download_variant(&variant("typed-decisions"))
-        .expect("download must succeed when LAYA_TEST_DOWNLOAD is set");
+    // @step When I request the typed-decisions variant download over the network (opt-in via RLCD_TEST_DOWNLOAD; the real checkpoint is several hundred MB)
+    let resolved = rlcd::download::download_variant(&variant("typed-decisions"))
+        .expect("download must succeed when RLCD_TEST_DOWNLOAD is set");
 
     // @step Then all five checkpoint files are present under the cache's laya-typed-decisions directory
-    let dir = cache.join("laya-rs").join("laya-typed-decisions");
+    let dir = cache.join("rlcd-rs").join("laya-typed-decisions");
     for file in REQUIRED {
         assert!(dir.join(file).is_file(), "missing {file} under {}", dir.display());
     }
@@ -93,8 +93,8 @@ fn a_fully_cached_download_touches_nothing() {
     let cache = tmp_root("full");
     let _ = std::fs::remove_dir_all(&cache);
     set_env("XDG_CACHE_HOME", Some(cache.to_str().unwrap()));
-    set_env("LAYA_OFFLINE", Some("1")); // any missing file would now be a hard error
-    let variant_dir = cache.join("laya-rs").join("laya-multilingual");
+    set_env("RLCD_OFFLINE", Some("1")); // any missing file would now be a hard error
+    let variant_dir = cache.join("rlcd-rs").join("laya-multilingual");
     make_checkpoint(&variant_dir, "cached-bytes");
     let before: std::collections::HashMap<PathBuf, Vec<u8>> = REQUIRED
         .iter()
@@ -104,8 +104,8 @@ fn a_fully_cached_download_touches_nothing() {
         })
         .collect();
 
-    // @step When I request the variant download with LAYA_OFFLINE set
-    let resolved = laya::download::download_variant(&variant("multilingual"))
+    // @step When I request the variant download with RLCD_OFFLINE set
+    let resolved = rlcd::download::download_variant(&variant("multilingual"))
         .expect("fully cached + offline must succeed without network");
 
     // @step Then it succeeds without downloading anything
@@ -117,7 +117,7 @@ fn a_fully_cached_download_touches_nothing() {
         assert_eq!(now, *content, "file changed: {}", p.display());
     }
     set_env("XDG_CACHE_HOME", None);
-    set_env("LAYA_OFFLINE", None);
+    set_env("RLCD_OFFLINE", None);
     let _ = std::fs::remove_dir_all(&cache);
 }
 
@@ -126,27 +126,27 @@ fn a_fully_cached_download_touches_nothing() {
 fn offline_with_a_partial_cache_is_an_actionable_error() {
     let _guard = env_lock();
 
-    // @step Given a cache holding only some of the checkpoint files and LAYA_OFFLINE set
+    // @step Given a cache holding only some of the checkpoint files and RLCD_OFFLINE set
     let cache = tmp_root("partial");
     let _ = std::fs::remove_dir_all(&cache);
     set_env("XDG_CACHE_HOME", Some(cache.to_str().unwrap()));
-    set_env("LAYA_OFFLINE", Some("1"));
-    let variant_dir = cache.join("laya-rs").join("laya-multilingual");
+    set_env("RLCD_OFFLINE", Some("1"));
+    let variant_dir = cache.join("rlcd-rs").join("laya-multilingual");
     std::fs::create_dir_all(&variant_dir).unwrap();
     std::fs::write(variant_dir.join("rl_agent_config.json"), b"{}").unwrap();
 
     // @step When I request the variant download
-    let err = laya::download::download_variant(&variant("multilingual"))
+    let err = rlcd::download::download_variant(&variant("multilingual"))
         .expect_err("partial cache + offline must fail");
 
-    // @step Then it fails with an error naming the first missing file, LAYA_OFFLINE, and --model
+    // @step Then it fails with an error naming the first missing file, RLCD_OFFLINE, and --model
     let msg = format!("{err:?}");
     assert!(msg.contains("encoder/config.json"), "first missing file: {msg}");
-    assert!(msg.contains("LAYA_OFFLINE"), "must name LAYA_OFFLINE: {msg}");
+    assert!(msg.contains("RLCD_OFFLINE"), "must name RLCD_OFFLINE: {msg}");
     assert!(msg.contains("--model"), "must name --model: {msg}");
     // No `.part` sibling may exist: nothing partial was fetched before the error.
     assert!(!variant_dir.join("encoder/config.json.part").exists(), "no .part may survive");
     set_env("XDG_CACHE_HOME", None);
-    set_env("LAYA_OFFLINE", None);
+    set_env("RLCD_OFFLINE", None);
     let _ = std::fs::remove_dir_all(&cache);
 }

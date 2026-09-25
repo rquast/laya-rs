@@ -18,28 +18,28 @@ Feature: Train (fine-tune) via CLI over a JSONL dataset
   #   3. Each epoch logs one line of mean loss/reward; trained weights are saved to `<model_dir>/model.trained.safetensors` unless --save-to overrides the path
   #
   # EXAMPLES:
-  #   1. Running `laya train /path/to/checkpoint train.jsonl` (1 epoch) prints an epoch summary line and writes /path/to/checkpoint/model.trained.safetensors
+  #   1. Running `rlcd train /path/to/checkpoint train.jsonl` (1 epoch) prints an epoch summary line and writes /path/to/checkpoint/model.trained.safetensors
   #   2. Passing --epochs 3 trains for three shuffled passes over the dataset and logs one epoch line per pass
   #   3. A JSONL line that is not a valid training record (bad JSON) aborts the run with a parse error instead of silently skipping it
   #
   # ========================================
   Background: User Story
     As a ML practitioner
-    I want to fine-tune the decision model via `laya train` over a JSONL dataset
+    I want to fine-tune the decision model via `rlcd train` over a JSONL dataset
     So that the shipped checkpoint is tuned to my domain's decision labels
 
   Scenario: One epoch trains and saves default-path weights
     Given a checkpoint directory and a one-line JSONL dataset
-    When I run `laya train` with default epochs
+    When I run `rlcd train` with default epochs
     Then one epoch summary line is printed
     And the trained weights are saved to `<model_dir>/model.trained.safetensors`
 
   Scenario: Multiple epochs log one line per pass
     Given a JSONL dataset with two or more records
-    When I run `laya train` with `--epochs 3`
+    When I run `rlcd train` with `--epochs 3`
     Then three epoch summary lines are printed, one per shuffled pass
 
   Scenario: A malformed JSONL line aborts with a parse error
     Given a JSONL dataset containing one line that is not a valid record
-    When I run `laya train` over it
+    When I run `rlcd train` over it
     Then the run aborts with a parse error instead of silently skipping the line

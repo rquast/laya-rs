@@ -19,7 +19,7 @@ schemas below (fetched 2026-09-22):
 
 Transport: `Content-Type: application/json`, non-streaming JSON responses.
 No query parameters, no required custom headers, no authentication in the
-reference (the laya-rs server matches: no auth).
+reference (the rlcd-rs server matches: no auth).
 
 ## Request body (JSON Schema)
 
@@ -62,7 +62,7 @@ Unknown **top-level** fields are ignored (including `stream`, `temperature`,
     },
     "required": ["role", "content"],
     "additionalProperties": false,
-    "note": "laya-rs: text-only messages; image/audio/tool-call content and extra fields rejected (422 'text messages')."
+    "note": "rlcd-rs: text-only messages; image/audio/tool-call content and extra fields rejected (422 'text messages')."
   },
 
   "question": {
@@ -121,7 +121,7 @@ Unknown **top-level** fields are ignored (including `stream`, `temperature`,
     "properties": { "raw_logits": { "type": "boolean", "default": false } },
     "required": ["raw_logits"],
     "additionalProperties": false,
-    "note": "laya-rs: options.raw_logits=true is rejected (422) — raw-logit diagnostics are not supported on the laya backend."
+    "note": "rlcd-rs: options.raw_logits=true is rejected (422) — raw-logit diagnostics are not supported on the laya backend."
   }
 }
 ```
@@ -139,12 +139,12 @@ object/array *does* count as supplied `state`.
   `Loaded model is '<name>'`.
 - Each compiled question sequence must fit `min(--max-model-len, checkpoint
   native max_len)`; there is **no automatic truncation** at the protocol layer —
-  overflow is a 422 (laya-rs's `build_sequence` truncates internally, so the
+  overflow is a 422 (rlcd-rs's `build_sequence` truncates internally, so the
   server must pre-check and reject rather than silently shorten).
 - Question count ≤ `--max-request-branches` (default 100; the schema hard cap
   is 256) → 422 otherwise.
 - Non-empty `tools`, `mm_processor_kwargs`, `media_io_kwargs`,
-  `options.raw_logits` → 422 (media/tools/raw-logits unsupported on laya).
+  `options.raw_logits` → 422 (media/tools/raw-logits unsupported on rlcd).
 - Text-only chat: message content must be a string; image/audio/video parts,
   tool/function roles, `name`, or other extra message fields → 422
   (reference error phrase: "text messages").
@@ -180,7 +180,7 @@ object/array *does* count as supplied `state`.
   probability; exact ties select the first candidate (insertion order).
   `confidence` = winning candidate's probability. `probabilities` maps every
   candidate ID to its probability, summing ≈ 1. **No `act_probability` field**
-  (the laya SDK's action fields are omitted by the reference backend; laya-rs
+  (the laya SDK's action fields are omitted by the reference backend; rlcd-rs
   emits one today — the server strips it).
 - **score**: `score` = expected zero-based rubric index `sum(p[i] * i)`
   (fractional allowed; range 0..N-1). `confidence` = largest criterion
@@ -234,14 +234,14 @@ Shared 4xx envelope (JSON):
 
 ## Server startup arguments (reference CLI, for parity)
 
-| Argument | Reference default | laya-rs mapping |
+| Argument | Reference default | rlcd-rs mapping |
 | --- | --- | --- |
 | `--model` (required) | — | `--model` / `--model-variant` / `--models-root` via `model_path::resolve` |
 | `--host` | `127.0.0.1` | `--host` (same default) |
 | `--port` | `8000` | `--port` (same default) |
 | `--max-model-len` | `16384` | `--max-model-len` (default: checkpoint `max_len`) |
 | `--max-request-branches` | `100` | `--max-request-branches` (same default) |
-| `--max-batch-size` / `--max-batch-tokens` | suffix-batching (LLM only) | N/A — laya batches all questions in one forward |
+| `--max-batch-size` / `--max-batch-tokens` | suffix-batching (LLM only) | N/A — rlcd batches all questions in one forward |
 | admission queue | 16 waiting | `--max-queued` (default 16) |
 
 ## Differences from TypeSafe's official hosted API (out of scope)

@@ -43,7 +43,7 @@ Answer {
 
 ## Contract mismatch noted
 
-`scripts/jev_batch.py` invokes `laya answer ... --model-dir DIR`, but the `Answer` subcommand defines
+`scripts/jev_batch.py` invokes `rlcd answer ... --model-dir DIR`, but the `Answer` subcommand defines
 `--model` (env `LAYA_MODEL`), not `--model-dir`. Tracked as a red card under INFER-007.
 
 ## Testability notes

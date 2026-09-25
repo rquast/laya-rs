@@ -4,17 +4,17 @@
  * This test file validates the acceptance criteria defined in the feature file.
  * Scenarios map directly to Gherkin scenarios.
  *
- * The `laya` binary is located via the LAYA_TEST_BINARY env var (cargo sets
- * CARGO_BIN_EXE_laya for integration tests). Scenarios that need a real
+ * The `rlcd` binary is located via the RLCD_TEST_BINARY env var (cargo sets
+ * CARGO_BIN_EXE_rlcd for integration tests). Scenarios that need a real
  * checkpoint gate on LAYA_TEST_MODEL (checkpoint directory); without it they
  * are skipped — model weights are not bundled in the repository.
  */
 
 use std::process::Command;
 
-fn laya_bin() -> String {
-    std::env::var("LAYA_TEST_BINARY")
-        .unwrap_or_else(|_| env!("CARGO_BIN_EXE_laya").to_string())
+fn rlcd_bin() -> String {
+    std::env::var("RLCD_TEST_BINARY")
+        .unwrap_or_else(|_| env!("CARGO_BIN_EXE_rlcd").to_string())
 }
 
 fn model_dir() -> Option<String> {
@@ -24,14 +24,14 @@ fn model_dir() -> Option<String> {
 /// Scenario: Missing required flags produce a usage error
 #[test]
 fn ask_missing_required_flags_produces_usage_error() {
-    // @step Given the `laya` binary is available
-    let bin = laya_bin();
+    // @step Given the `rlcd` binary is available
+    let bin = rlcd_bin();
 
-    // @step When the user runs `laya ask` without --state or --question
+    // @step When the user runs `rlcd ask` without --state or --question
     let out = Command::new(&bin)
         .args(["ask"])
         .output()
-        .expect("failed to run laya");
+        .expect("failed to run rlcd");
 
     // @step Then clap rejects the command with a non-zero exit and a usage message naming the missing --state and --question flags
     assert!(!out.status.success());
@@ -51,8 +51,8 @@ fn ask_routed_choice_question_prints_probabilities() {
     // @step Given a laya checkpoint is available and the state is "We were billed twice for March. Please refund the duplicate."
     let state = "We were billed twice for March. Please refund the duplicate.";
 
-    // @step When the user runs `laya ask --state "<state>" --question "Which team should handle this?" --option billing --option technical`
-    let out = Command::new(laya_bin())
+    // @step When the user runs `rlcd ask --state "<state>" --question "Which team should handle this?" --option billing --option technical`
+    let out = Command::new(rlcd_bin())
         .args([
             "ask",
             "--model",
@@ -67,7 +67,7 @@ fn ask_routed_choice_question_prints_probabilities() {
             "technical",
         ])
         .output()
-        .expect("failed to run laya");
+        .expect("failed to run rlcd");
 
     // @step Then stderr shows the routed checkpoint and resolved directory and stdout shows `choice=<option> confidence=<c> act_p=<p>` followed by one indented probability line for each option
     assert!(out.status.success(), "stderr: {}", String::from_utf8_lossy(&out.stderr));
@@ -92,8 +92,8 @@ fn explicit_model_bypasses_routing_and_resolution() {
     // @step Given a checkpoint directory at /path/to/laya-typed-decisions exists and contains the five required files
     let _ = &model; // the LAYA_TEST_MODEL directory stands in for the checkpoint
 
-    // @step When the user runs `laya ask --model /path/to/laya-typed-decisions --state "..." --question "..." --option a --option b`
-    let out = Command::new(laya_bin())
+    // @step When the user runs `rlcd ask --model /path/to/laya-typed-decisions --state "..." --question "..." --option a --option b`
+    let out = Command::new(rlcd_bin())
         .args([
             "ask",
             "--model",
@@ -108,7 +108,7 @@ fn explicit_model_bypasses_routing_and_resolution() {
             "b",
         ])
         .output()
-        .expect("failed to run laya");
+        .expect("failed to run rlcd");
 
     // @step Then the command loads /path/to/laya-typed-decisions as-is without running the language router or checking a models root
     assert!(out.status.success(), "stderr: {}", String::from_utf8_lossy(&out.stderr));

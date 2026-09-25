@@ -1,7 +1,7 @@
 {
   "scenarios": [
     {
-      "name": "A Jev-protocol client completes the quickstart against the laya server",
+      "name": "A Jev-protocol client completes the quickstart against the rlcd server",
       "testMappings": [
         {
           "file": "tests/jev_architecture.rs",

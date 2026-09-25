@@ -185,7 +185,7 @@ impl DecisionModel {
         marker_mask: &Tensor,
         qtype: &Tensor,
     ) -> candle_core::Result<(Tensor, Tensor)> {
-        let debug_timing = std::env::var("LAYA_TIMING").is_ok();
+        let debug_timing = std::env::var("RLCD_TIMING").is_ok();
         let t0 = crate::timing::Instant::now();
         let h = self.encoder.forward(input_ids, attention_mask)?; // [b,s,d]
         if debug_timing { input_ids.device().synchronize()?; }

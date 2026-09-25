@@ -9,9 +9,9 @@
  * They gate on LAYA_TEST_MODEL (checkpoint directory) and skip without it.
  */
 
-use laya::agent::answer_to_json;
-use laya::RLAgent;
-use laya::schema::{QType, Question};
+use rlcd::agent::answer_to_json;
+use rlcd::RLAgent;
+use rlcd::schema::{QType, Question};
 use serde_json::json;
 
 fn model_dir() -> Option<String> {
@@ -50,7 +50,7 @@ fn a_choice_answer_is_typed_and_normalized() {
         .expect("system_one must succeed");
 
     // @step Then the probability entries exactly match the question's options, sum to 1.0
-    let laya::Answer::Choice { probabilities, .. } = &answers[0].1 else {
+    let rlcd::Answer::Choice { probabilities, .. } = &answers[0].1 else {
         panic!("expected a Choice answer");
     };
     let keys: Vec<&str> = probabilities.iter().map(|(k, _)| k.as_str()).collect();
@@ -59,7 +59,7 @@ fn a_choice_answer_is_typed_and_normalized() {
     assert!((sum - 1.0).abs() < 1e-3, "probabilities must sum to 1.0, got {sum}");
 
     // @step And the returned choice is the argmax option
-    let laya::Answer::Choice { choice, probabilities, .. } = &answers[0].1 else {
+    let rlcd::Answer::Choice { choice, probabilities, .. } = &answers[0].1 else {
         panic!("expected a Choice answer");
     };
     let argmax = probabilities
@@ -106,7 +106,7 @@ fn a_score_answer_spans_the_legend_and_a_noul_answer_is_a_0_1_float() {
         .expect("system_one must succeed");
 
     // @step Then the score lies between the legend's extremes with one probability per legend entry
-    let laya::Answer::Score { score, probabilities, legend, .. } = &answers[0].1 else {
+    let rlcd::Answer::Score { score, probabilities, legend, .. } = &answers[0].1 else {
         panic!("expected a Score answer");
     };
     let n = legend.len();
@@ -114,7 +114,7 @@ fn a_score_answer_spans_the_legend_and_a_noul_answer_is_a_0_1_float() {
     assert!((0.0..=3.0).contains(score), "score {score} must lie within the legend range 0..3");
 
     // @step And the noul answer is a single float in [0,1]
-    let laya::Answer::Noul { noul, .. } = &answers[1].1 else {
+    let rlcd::Answer::Noul { noul, .. } = &answers[1].1 else {
         panic!("expected a Noul answer");
     };
     assert!((0.0..=1.0).contains(noul), "noul {noul} must be in [0,1]");

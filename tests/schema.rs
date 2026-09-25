@@ -12,7 +12,7 @@
 
 use std::collections::HashMap;
 
-use laya::schema::{build_sequence, render_options, QType, Question, SpecialTokens};
+use rlcd::schema::{build_sequence, render_options, QType, Question, SpecialTokens};
 use tokenizers::models::wordlevel::WordLevel;
 use tokenizers::pre_tokenizers::whitespace::Whitespace;
 use tokenizers::Tokenizer;

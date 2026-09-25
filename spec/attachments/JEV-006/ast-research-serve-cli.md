@@ -1,4 +1,4 @@
-# AST Research: JEV-006 `laya serve` CLI + server lifecycle
+# AST Research: JEV-006 `rlcd serve` CLI + server lifecycle
 
 Research performed with AstGrep + targeted reads before specifying the
 `Command::Serve` + `start_server`/`ServerHandle` implementation.
@@ -33,7 +33,7 @@ pub async fn start_server(host: String, model_name: String,
             let _ = rx.await;
         });
         if let Err(err) = server.await {
-            tracing::error!("laya server error: {err}");
+            tracing::error!("rlcd server error: {err}");
         }
     });
     Ok(ServerHandle { port, model_name, shutdown: tx, task })
@@ -49,7 +49,7 @@ gives the ctrl-C → stop() behavior: in-flight forwards (spawn_blocking)
 complete before the task ends — the reference's "in-flight forward cannot be
 interrupted" rule.
 
-## 2. Existing laya-rs seams (what JEV-006 wires together)
+## 2. Existing rlcd-rs seams (what JEV-006 wires together)
 
 - `src/model_path.rs:68` — `pub fn resolve(default_variant_key: &str,
   explicit: Option<PathBuf>, requested_variant: Option<&str>,
@@ -86,7 +86,7 @@ Integration decisions:
   (reference rule: "the model ID or local path used to start the server").
 - `main.rs` serve block: `model_path::resolve` (same precedence) →
   eprintln progress → `RLAgent::load` → `start_server` → banner
-  `laya serving '<model>' on http://<host>:<port>` →
+  `rlcd serving '<model>' on http://<host>:<port>` →
   `tokio::signal::ctrl_c().await` → `handle.stop()`.
 - New dev-dep needs: tokio `macros` + `net` + `rt-multi-thread`? No —
   the CLI uses `#[tokio::main]` (multi-thread) — tokio `full`? Minimal:
@@ -96,7 +96,7 @@ Integration decisions:
 
 ## 3. Test strategy (weight-free where possible)
 
-`tests/serve_cli.rs`, binary at `env!("CARGO_BIN_EXE_laya")` (cli_ask.rs
+`tests/serve_cli.rs`, binary at `env!("CARGO_BIN_EXE_rlcd")` (cli_ask.rs
 pattern):
 - Parse-time rejections (weight-free): `serve --max-queued 0`,
   `--max-request-branches -1`, `--port 0` → non-zero exit, clap usage

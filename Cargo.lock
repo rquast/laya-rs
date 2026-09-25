@@ -1237,35 +1237,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "laya-rs"
-version = "0.3.0"
-dependencies = [
- "anyhow",
- "axum",
- "candle-core",
- "candle-flash-attn",
- "candle-nn",
- "clap",
- "console_error_panic_hook",
- "getrandom 0.2.17",
- "getrandom 0.3.4",
- "half",
- "js-sys",
- "rand 0.8.8",
- "rand_distr 0.4.3",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "tokenizers",
- "tokio",
- "tower",
- "tower-http",
- "ureq",
- "wasm-bindgen",
- "whichlang",
-]
-
-[[package]]
 name = "lazy_static"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1784,6 +1755,35 @@ dependencies = [
  "libc",
  "untrusted",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "rlcd-rs"
+version = "0.3.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "candle-core",
+ "candle-flash-attn",
+ "candle-nn",
+ "clap",
+ "console_error_panic_hook",
+ "getrandom 0.2.17",
+ "getrandom 0.3.4",
+ "half",
+ "js-sys",
+ "rand 0.8.8",
+ "rand_distr 0.4.3",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "tokenizers",
+ "tokio",
+ "tower",
+ "tower-http",
+ "ureq",
+ "wasm-bindgen",
+ "whichlang",
 ]
 
 [[package]]

@@ -1,7 +1,7 @@
 //! Downloads a standalone checkpoint from Hugging Face into the shared model cache.
 //!
-//! Cache location: `$XDG_CACHE_HOME/laya-rs/<repo basename>`, falling back to
-//! `~/.cache/laya-rs/<repo basename>` when `$XDG_CACHE_HOME` is unset. Files are
+//! Cache location: `$XDG_CACHE_HOME/rlcd-rs/<repo basename>`, falling back to
+//! `~/.cache/rlcd-rs/<repo basename>` when `$XDG_CACHE_HOME` is unset. Files are
 //! fetched to a `.part` sibling and renamed into place once complete, so a killed
 //! download never leaves a checkpoint that looks done.
 
@@ -13,18 +13,17 @@ use anyhow::{bail, Context, Result};
 
 use crate::model_path::VariantDef;
 
-/// Files every checkpoint needs in order to load (see `RLAgent::load`), also
-/// mirrored by the website demo's `CHECKPOINT_FILES` (website/src/lib/models.ts).
+/// Files every checkpoint needs in order to load (see `RLAgent::load`).
 const REQUIRED_FILES: &[&str] =
     &["rl_agent_config.json", "encoder/config.json", "tokenizer/tokenizer.json", "tokenizer/tokenizer_config.json", "model.safetensors"];
 
-/// `$XDG_CACHE_HOME/laya-rs`, defaulting to `~/.cache/laya-rs`.
+/// `$XDG_CACHE_HOME/rlcd-rs`, defaulting to `~/.cache/rlcd-rs`.
 pub fn cache_dir() -> Option<PathBuf> {
     let base = std::env::var_os("XDG_CACHE_HOME")
         .map(PathBuf::from)
         .filter(|p| p.is_absolute())
         .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".cache")))?;
-    Some(base.join("laya-rs"))
+    Some(base.join("rlcd-rs"))
 }
 
 /// The checkpoint directory name for a variant: the repo name portion of
@@ -79,7 +78,7 @@ fn fetch_to_file(url: &str, dest: &Path) -> Result<()> {
 }
 
 /// Downloads `variant`'s checkpoint from its Hugging Face repo into the
-/// laya-rs cache directory, skipping files already present, and returns
+/// rlcd-rs cache directory, skipping files already present, and returns
 /// the checkpoint directory. Requires network access; any failure (offline,
 /// 404, disk error, ...) is returned as an error and nothing partial is left
 /// looking complete.
@@ -97,9 +96,9 @@ pub fn download_variant(variant: &VariantDef) -> Result<PathBuf> {
             eprintln!("Downloading {} from https://huggingface.co/{} into {}", variant.key, variant.hf_repo, dir.display());
             announced = true;
         }
-        if std::env::var_os("LAYA_OFFLINE").is_some() {
+        if std::env::var_os("RLCD_OFFLINE").is_some() {
             bail!(
-                "{} is missing from {} and LAYA_OFFLINE is set; unset it to allow downloading, or pass --model",
+                "{} is missing from {} and RLCD_OFFLINE is set; unset it to allow downloading, or pass --model",
                 file,
                 dir.display()
             );

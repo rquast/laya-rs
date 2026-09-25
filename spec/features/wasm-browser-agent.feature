@@ -12,14 +12,14 @@ Feature: Answer typed questions in the browser via wasm bindings
   empty -> Err "no questions given", system_one, answer_to_json per qid,
   serializes {qid: {...}}). Errors: anyhow_to_js_err uses format!("{e:#}") for the
   full context chain; to_js_err for plain. #[wasm_bindgen(start)] init_panic_hook
-  (console_error_panic_hook). Callers: website/src/lib/laya.ts JS fetches the five
+  (console_error_panic_hook). Callers: browser JS (e.g. a page script) fetches the five
   files from HF and calls load/ask; lib is crate-type [rlib, cdylib].
 
   SCOPE NOTE: the load/ask business logic (empty-batch rejection, answer JSON
   shape, error context surfacing) is shared with the native CLI path and is
   covered by the native test files (tests/schema.rs, tests/cli_answer.rs,
   tests/agent.rs). Running the wasm in a real VM is intentionally NOT part of the
-  test path (deferred product decision); the browser demo (website) exercises it
+  test path (deferred product decision); the browser (cdylib) path exercises it
   end-to-end. This feature verifies the wasm-specific criterion: the lib builds
   for the browser target with the onig-free pure-Rust tokenizers backend.
   """
@@ -39,10 +39,10 @@ Feature: Answer typed questions in the browser via wasm bindings
   # ========================================
   Background: User Story
     As a Browser/JS developer
-    I want to run laya in the browser via WasmAgent (load checkpoint from bytes, ask a batch of typed questions)
+    I want to run rlcd in the browser via WasmAgent (load checkpoint from bytes, ask a batch of typed questions)
     So that I get the same typed decisions in the browser demo without a Python backend
 
   Scenario: The crate compiles for the browser target
-    Given the laya library with its pure-Rust tokenizers backend
+    Given the rlcd library with its pure-Rust tokenizers backend
     When I compile the lib for wasm32-unknown-unknown
     Then the build succeeds with no C-linked tokenizer backend in the dependency tree

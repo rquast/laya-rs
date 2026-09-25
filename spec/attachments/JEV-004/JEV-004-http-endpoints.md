@@ -22,7 +22,7 @@ pub fn build_router(state: ServerState) -> Router {
 
 - `ServerState` (JEV-005) is the `Clone`-over-`Arc` state newtype, injected via
   axum's `State` extractor.
-- The reference also serves `/docs` (Swagger) and `/redoc`; the laya-rs server
+- The reference also serves `/docs` (Swagger) and `/redoc`; the rlcd-rs server
   serves `/openapi.json` only (the machine-readable contract) — interactive
   docs are out of scope and noted in the feature file.
 

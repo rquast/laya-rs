@@ -4,7 +4,7 @@
  * This test file validates the acceptance criteria defined in the feature file.
  * Scenarios map directly to Gherkin scenarios.
  *
- * `laya train` needs a real checkpoint directory (rl_agent_config.json,
+ * `rlcd train` needs a real checkpoint directory (rl_agent_config.json,
  * tokenizer/, encoder/, model.safetensors) because `Trainer::load` runs before
  * the dataset is read. Scenarios that train gate on LAYA_TEST_MODEL (checkpoint
  * directory); without it they are skipped — model weights are not bundled in the
@@ -14,9 +14,9 @@
 use std::io::Write;
 use std::process::Command;
 
-fn laya_bin() -> String {
-    std::env::var("LAYA_TEST_BINARY")
-        .unwrap_or_else(|_| env!("CARGO_BIN_EXE_laya").to_string())
+fn rlcd_bin() -> String {
+    std::env::var("RLCD_TEST_BINARY")
+        .unwrap_or_else(|_| env!("CARGO_BIN_EXE_rlcd").to_string())
 }
 
 fn model_dir() -> Option<String> {
@@ -47,15 +47,15 @@ fn one_epoch_trains_and_saves_default_path_weights() {
     };
 
     // @step Given a checkpoint directory and a one-line JSONL dataset
-    let tmp = std::env::temp_dir().join(format!("laya-train-test-{}", std::process::id()));
+    let tmp = std::env::temp_dir().join(format!("rlcd-train-test-{}", std::process::id()));
     let dataset = tmp.join("train.jsonl");
     write_jsonl(&dataset, &[record_line("We were billed twice for March.", 0)]);
 
-    // @step When I run `laya train` with default epochs
-    let out = Command::new(laya_bin())
+    // @step When I run `rlcd train` with default epochs
+    let out = Command::new(rlcd_bin())
         .args(["train", &model, dataset.to_str().unwrap()])
         .output()
-        .expect("failed to run laya");
+        .expect("failed to run rlcd");
 
     // @step Then one epoch summary line is printed
     assert!(out.status.success(), "stderr: {}", String::from_utf8_lossy(&out.stderr));
@@ -79,7 +79,7 @@ fn multiple_epochs_log_one_line_per_pass() {
     };
 
     // @step Given a JSONL dataset with two or more records
-    let tmp = std::env::temp_dir().join(format!("laya-train-test-epochs-{}", std::process::id()));
+    let tmp = std::env::temp_dir().join(format!("rlcd-train-test-epochs-{}", std::process::id()));
     let dataset = tmp.join("train.jsonl");
     write_jsonl(
         &dataset,
@@ -89,11 +89,11 @@ fn multiple_epochs_log_one_line_per_pass() {
         ],
     );
 
-    // @step When I run `laya train` with `--epochs 3`
-    let out = Command::new(laya_bin())
+    // @step When I run `rlcd train` with `--epochs 3`
+    let out = Command::new(rlcd_bin())
         .args(["train", &model, dataset.to_str().unwrap(), "--epochs", "3"])
         .output()
-        .expect("failed to run laya");
+        .expect("failed to run rlcd");
 
     // @step Then three epoch summary lines are printed, one per shuffled pass
     assert!(out.status.success(), "stderr: {}", String::from_utf8_lossy(&out.stderr));
@@ -113,15 +113,15 @@ fn a_malformed_jsonl_line_aborts_with_a_parse_error() {
     };
 
     // @step Given a JSONL dataset containing one line that is not a valid record
-    let tmp = std::env::temp_dir().join(format!("laya-train-test-bad-{}", std::process::id()));
+    let tmp = std::env::temp_dir().join(format!("rlcd-train-test-bad-{}", std::process::id()));
     let dataset = tmp.join("train.jsonl");
     write_jsonl(&dataset, &["not a json record at all".to_string()]);
 
-    // @step When I run `laya train` over it
-    let out = Command::new(laya_bin())
+    // @step When I run `rlcd train` over it
+    let out = Command::new(rlcd_bin())
         .args(["train", &model, dataset.to_str().unwrap()])
         .output()
-        .expect("failed to run laya");
+        .expect("failed to run rlcd");
 
     // @step Then the run aborts with a parse error instead of silently skipping the line
     assert!(!out.status.success(), "expected failure, stdout: {}", String::from_utf8_lossy(&out.stdout));

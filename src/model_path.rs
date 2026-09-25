@@ -1,9 +1,8 @@
 //! Shared checkpoint-directory resolution for the CLI.
 //!
-//! Two checkpoint layouts are recognized, matching the website demo's model
-//! picker (see `website/src/lib/laya.ts`'s `LocalLibrary` and
-//! `localDirCandidates`): standalone per-variant Hugging Face repos (one
-//! full checkpoint each, `convaiinnovations/laya-<variant>`) and the
+//! Two checkpoint layouts are recognized: standalone per-variant Hugging
+//! Face repos (one full checkpoint each, `convaiinnovations/laya-<variant>`)
+//! and the
 //! `convaiinnovations/laya` hub repo — or a local clone of it, e.g. `~/laya`
 //! — which bundles every variant as a same-named subfolder.
 //!
@@ -14,8 +13,8 @@
 //! if a family root is given (`--models-root`/`LAYA_MODELS_ROOT` — there is
 //! no default; without one this step is skipped entirely), the variant's
 //! subfolder under it is used when present. Failing both, the variant's own
-//! cached standalone download is used (`$XDG_CACHE_HOME/laya-rs`, default
-//! `~/.cache/laya-rs`), fetching it there first if needed (see
+//! cached standalone download is used (`$XDG_CACHE_HOME/rlcd-rs`, default
+//! `~/.cache/rlcd-rs`), fetching it there first if needed (see
 //! `crate::download`).
 
 use std::path::{Path, PathBuf};
@@ -31,7 +30,7 @@ pub struct VariantDef {
     pub subfolder: &'static str,
 }
 
-/// Mirrors the website demo's `CHECKPOINT_MODELS` (website/src/lib/models.ts).
+/// The two checkpoint variants the CLI can target.
 pub const VARIANTS: &[VariantDef] = &[
     VariantDef { key: "typed-decisions", hf_repo: "convaiinnovations/laya-typed-decisions", subfolder: "typed-decisions" },
     VariantDef { key: "multilingual", hf_repo: "convaiinnovations/laya-multilingual", subfolder: "multilingual" },
@@ -47,8 +46,7 @@ fn hf_repo_basename(hf_repo: &str) -> &str {
 
 /// Subdirectory names that would hold `variant`'s files directly under a
 /// family root, in preference order: the standalone repo's own basename
-/// first, then the hub repo's subfolder name (same order and reasoning as
-/// the website's `localDirCandidates`).
+/// first, then the hub repo's subfolder name.
 fn family_root_candidates(variant: &VariantDef) -> [&str; 2] {
     [hf_repo_basename(variant.hf_repo), variant.subfolder]
 }

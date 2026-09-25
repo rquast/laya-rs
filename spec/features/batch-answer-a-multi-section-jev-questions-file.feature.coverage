@@ -152,7 +152,7 @@
       ]
     },
     {
-      "name": "The built laya binary is auto-detected before PATH",
+      "name": "The built rlcd binary is auto-detected before PATH",
       "testMappings": [
         {
           "file": "tests/jev_batch.py",

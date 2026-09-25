@@ -11,7 +11,7 @@ thread_local! {
     static PHASE_NS: RefCell<BTreeMap<&'static str, u128>> = RefCell::new(BTreeMap::new());
 }
 
-/// Adds `dur` to the running total for `phase`, only when `LAYA_TIMING=1` (checked once by the
+/// Adds `dur` to the running total for `phase`, only when `RLCD_TIMING=1` (checked once by the
 /// caller and passed in, so this stays a no-op branch in the hot path otherwise). Synchronizes
 /// the device first so the measured duration reflects actual GPU compute, not just dispatch.
 fn record_phase(debug_timing: bool, device: &Device, phase: &'static str, t0: crate::timing::Instant) -> Result<()> {
@@ -396,7 +396,7 @@ impl ModernBert {
 
     /// input_ids: [b, s] i64, attention_mask: [b, s] i64 (1 = real token, 0 = pad)
     pub fn forward(&self, input_ids: &Tensor, attention_mask: &Tensor) -> Result<Tensor> {
-        let debug_timing = std::env::var("LAYA_TIMING").is_ok();
+        let debug_timing = std::env::var("RLCD_TIMING").is_ok();
         let (b, s) = input_ids.dims2()?;
         let mut h = self.tok_embeddings.forward(input_ids)?;
         h = self.emb_norm.forward(&h)?;

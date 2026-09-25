@@ -1,6 +1,6 @@
 //! `std::time::Instant::now()` panics on `wasm32-unknown-unknown` ("time not
 //! implemented on this platform" — there's no OS clock on that target). The
-//! per-op `LAYA_TIMING` instrumentation scattered through `modernbert.rs`,
+//! per-op `RLCD_TIMING` instrumentation scattered through `modernbert.rs`,
 //! `decision_model.rs` and `agent.rs` is native-only diagnostics that's
 //! supposed to be a no-op unless that env var is set, but the `Instant::now()`
 //! calls themselves were unconditional — so every forward pass panicked in

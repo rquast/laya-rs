@@ -1,4 +1,4 @@
-# JEV-006 — `laya serve` CLI Subcommand
+# JEV-006 — `rlcd serve` CLI Subcommand
 
 Scope: `Command::Serve` in `src/main.rs` + `ServerHandle`/`start_server` in
 `src/server/` (the `start_server`/`ServerHandle` lifecycle pattern from
@@ -8,15 +8,15 @@ listener, and runs until interrupted.
 ## CLI contract
 
 ```
-laya serve [--model DIR] | [--model-variant KEY] [--models-root DIR]
+rlcd serve [--model DIR] | [--model-variant KEY] [--models-root DIR]
            [--host ADDR] [--port N]
            [--max-model-len N] [--max-request-branches N] [--max-queued N]
 ```
 
-- Checkpoint resolution reuses `laya::model_path::resolve`
+- Checkpoint resolution reuses `rlcd::model_path::resolve`
   (CHECK-001/CHECK-002: explicit `--model` bypass; else variant key under
-  `--models-root`/`LAYA_MODELS_ROOT`; else download into `~/.cache/laya-rs`)
-  — identical precedence to `laya ask`/`laya answer`.
+  `--models-root`/`LAYA_MODELS_ROOT`; else download into `~/.cache/rlcd-rs`)
+  — identical precedence to `rlcd ask`/`rlcd answer`.
 - The **model name** reported in `/health`, checked against
   `request.model`, and echoed in responses is the value the user supplied
   (`--model` path or the variant key) — "the model ID or local path used to
@@ -51,7 +51,7 @@ pub async fn start_server(config: ServerConfig, agent: RLAgent) -> anyhow::Resul
   reference notes an in-flight forward "cannot be interrupted" — graceful
   wait is the correct behavior, not a kill.
 - Bind failure (port in use) → `anyhow` error before any HTTP is served.
-- Log line on startup: `laya serving '<model>' on http://<host>:<port>`
+- Log line on startup: `rlcd serving '<model>' on http://<host>:<port>`
   plus a hint of the endpoints.
 
 ## Errors

@@ -1,4 +1,4 @@
-# laya-rs
+# rlcd-rs
 
 A from-scratch Rust reimplementation of [Laya](https://laya.convaiinnovations.com/), Convai
 Innovations' sub-35ms, non-autoregressive "System 1" decision engine: give it a **state**
@@ -34,16 +34,16 @@ https://gist.github.com/framp/82a9973988cc41a8b552cb7850b70259
 
 ## Serving
 
-`laya` can run as a standalone HTTP server exposing the open [Jev/Simple-Jev v1
+`rlcd` can run as a standalone HTTP server exposing the open [Jev/Simple-Jev v1
 classifier](docs/jev-server/protocol-reference.md) protocol — a checkpoint, a
 listener, and a handful of endpoints:
 
 ```bash
-laya serve
+rlcd serve
 ```
 
 With no arguments this downloads the default `typed-decisions` checkpoint into
-`~/.cache/laya-rs` on first use, loads it, and binds `127.0.0.1:8000`. Point it
+`~/.cache/rlcd-rs` on first use, loads it, and binds `127.0.0.1:8000`. Point it
 at a specific checkpoint with `--model` (a local directory) or pick a different
 variant with `--model-variant multilingual`. The model name the server reports
 and that clients must echo in each request's `model` field is the value you
@@ -51,10 +51,10 @@ supplied — the variant key (default `typed-decisions`) or the `--model` path.
 
 ```bash
 # serve the default (English) checkpoint on 127.0.0.1:8000
-laya serve
+rlcd serve
 
 # serve a specific local checkpoint directory, on all interfaces, port 9000
-laya serve --model /path/to/laya-typed-decisions --host 0.0.0.0 --port 9000
+rlcd serve --model /path/to/laya-typed-decisions --host 0.0.0.0 --port 9000
 ```
 
 | Endpoint | Description |
@@ -122,7 +122,7 @@ of the two. The three question types (`choice`, `score`, `noul`) and the full
 `422` error envelope (`error.details[]`) are documented in
 [`docs/jev-server/`](docs/jev-server/).
 
-`laya serve` options:
+`rlcd serve` options:
 
 | Flag | Env | Default | Description |
 | --- | --- | --- | --- |
@@ -131,9 +131,9 @@ of the two. The three question types (`choice`, `score`, `noul`) and the full
 | `--models-root <DIR>` | `LAYA_MODELS_ROOT` | — | Root of a checkpoint family, checked before downloading |
 | `--host <ADDR>` | — | `127.0.0.1` | Bind address |
 | `--port <N>` | — | `8000` | Bind port |
-| `--max-model-len <N>` | `LAYA_MAX_MODEL_LEN` | checkpoint `max_len` | Per-question sequence cap (clamped to the checkpoint's native max) |
-| `--max-request-branches <N>` | `LAYA_MAX_REQUEST_BRANCHES` | `100` | Max questions per request |
-| `--max-queued <N>` | `LAYA_MAX_QUEUED` | `16` | Admission-queue depth on top of the in-flight forward |
+| `--max-model-len <N>` | `RLCD_MAX_MODEL_LEN` | checkpoint `max_len` | Per-question sequence cap (clamped to the checkpoint's native max) |
+| `--max-request-branches <N>` | `RLCD_MAX_REQUEST_BRANCHES` | `100` | Max questions per request |
+| `--max-queued <N>` | `RLCD_MAX_QUEUED` | `16` | Admission-queue depth on top of the in-flight forward |
 
 ## Installation
 
@@ -141,7 +141,7 @@ macOS (Apple Silicon) and Linux, via Homebrew:
 
 ```sh
 brew tap apiplant/tap
-brew install apiplant/tap/laya-rs
+brew install apiplant/tap/rlcd-rs
 ```
 
 Arch Linux, via the signed pacman repository at `apiplant.github.io/pacman`
@@ -151,7 +151,7 @@ Arch Linux, via the signed pacman repository at `apiplant.github.io/pacman`
 curl -sSfL https://apiplant.github.io/pacman/apiplant.gpg -o /tmp/apiplant.gpg
 keyid=$(gpg --show-keys --with-colons /tmp/apiplant.gpg | awk -F: '/^pub:/ { print $5; exit }') && sudo pacman-key --add /tmp/apiplant.gpg && sudo pacman-key --finger "$keyid" && sudo pacman-key --lsign-key "$keyid"
 printf '\n[apiplant]\nSigLevel = Required DatabaseOptional\nServer = https://apiplant.github.io/pacman/$arch\n' | sudo tee -a /etc/pacman.conf > /dev/null
-sudo pacman -Sy laya-rs
+sudo pacman -Sy rlcd-rs
 ```
 
 Debian/Ubuntu, via the signed apt repository at `apt.apiplant.com` (one-time
@@ -160,23 +160,23 @@ setup, then `apt upgrade` picks up new releases):
 ```sh
 curl -sSfL https://apt.apiplant.com/apiplant-archive-keyring.gpg | sudo tee /usr/share/keyrings/apiplant.gpg > /dev/null
 echo "deb [signed-by=/usr/share/keyrings/apiplant.gpg] https://apt.apiplant.com stable main" | sudo tee /etc/apt/sources.list.d/apiplant.list > /dev/null
-sudo apt update && sudo apt install laya-rs
+sudo apt update && sudo apt install rlcd-rs
 ```
 
 Or download the archive, `.deb`, or `.pkg.tar.zst` for your platform from the
-[releases page](https://github.com/apiplant/laya-rs/releases) and install it
-directly — the plain archive needs no installation at all, `laya` is static
+[releases page](https://github.com/apiplant/rlcd-rs/releases) and install it
+directly — the plain archive needs no installation at all, `rlcd` is static
 enough to run from anywhere. On Linux x86_64 with an Ampere-or-newer NVIDIA
-GPU, grab the `laya-rs-flash-attn-*-x86_64-unknown-linux-gnu.tar.gz` archive
+GPU, grab the `rlcd-rs-flash-attn-*-x86_64-unknown-linux-gnu.tar.gz` archive
 instead for CUDA + flash-attention-accelerated inference (needs a host driver
 compatible with the CUDA toolkit it was built against).
 
 As a Rust library, or to build the CLI from source, via crates.io:
 
 ```sh
-cargo add laya-rs         # as a library dependency
-cargo install laya-rs     # for the laya binary
-cargo install laya-rs --features flash-attn  # with CUDA + flash-attn support
+cargo add rlcd-rs         # as a library dependency
+cargo install rlcd-rs     # for the rlcd binary
+cargo install rlcd-rs --features flash-attn  # with CUDA + flash-attn support
 ```
 
 | Platform | Ships as |
@@ -194,15 +194,15 @@ built and published.
 
 ## Library
 
-`cargo add laya-rs` pulls in the `laya` crate (native target; the `wasm32-unknown-unknown`
-target instead exposes `laya::wasm::WasmAgent`, the same interface wrapped for
-`wasm-bindgen` — see `website/src/lib/laya.ts` for how the browser demo drives it). The
+`cargo add rlcd-rs` pulls in the `rlcd` crate (native target; the `wasm32-unknown-unknown`
+target instead exposes `rlcd::wasm::WasmAgent`, the same interface wrapped for
+`wasm-bindgen`). The
 surface is small: load an [`RLAgent`](src/agent.rs) from a checkpoint directory, build typed
 [`Question`](src/schema.rs)s, and get back typed [`Answer`](src/agent.rs)s.
 
 ```rust
 use serde_json::json;
-use laya::{Answer, QType, Question, RLAgent};
+use rlcd::{Answer, QType, Question, RLAgent};
 
 fn main() -> anyhow::Result<()> {
     // A checkpoint directory downloaded from Hugging Face (convaiinnovations/laya,
@@ -241,21 +241,21 @@ fn main() -> anyhow::Result<()> {
 }
 ```
 
-`Answer` is a plain enum, not `Serialize` — `laya::agent::answer_to_json` turns one into the
+`Answer` is a plain enum, not `Serialize` — `rlcd::agent::answer_to_json` turns one into the
 same `{"type": "choice"|"score"|"noul", ...}` JSON shape the CLI's `answer` subcommand and the
 wasm bindings emit, if that's more convenient than matching on it directly.
 
 Other pieces of the public API, all optional depending on what you need:
 
-- `laya::route` / `laya::Checkpoint` — the English-vs-multilingual language router, so you can
+- `rlcd::route` / `rlcd::Checkpoint` — the English-vs-multilingual language router, so you can
   pick a checkpoint from a state string before loading (native only; not exposed to wasm since
   the browser demo picks a checkpoint from the UI instead).
-- `laya::model_path` / `laya::download` — the CLI's own checkpoint resolution: given a variant
-  key, find it under a local family root or fetch it into `~/.cache/laya-rs` (native only).
+- `rlcd::model_path` / `rlcd::download` — the CLI's own checkpoint resolution: given a variant
+  key, find it under a local family root or fetch it into `~/.cache/rlcd-rs` (native only).
 - `RLAgent::load_from_bytes` — the same load path as `RLAgent::load`, but from in-memory file
   contents instead of a filesystem path (what the wasm bindings use, since there's no filesystem
   in a browser tab).
-- `laya::RlcdConfig` / `laya::Trainer` — the RLCD training loop (`Trainer::load` +
+- `rlcd::RlcdConfig` / `rlcd::Trainer` — the RLCD training loop (`Trainer::load` +
   `Trainer::train_step`/`train_jsonl`), for fine-tuning a checkpoint rather than just running it.
 
 ## Performance
@@ -313,7 +313,7 @@ Getting there was mostly about finding places where candle silently takes a slow
   elementwise ops, since `head_dim` << `seq_len`).
 - Unpadding once for the whole encoder instead of gathering/scattering per layer.
 
-Note that per-op timing via `LAYA_TIMING=1` inserts a `device.synchronize()` after each op, which
+Note that per-op timing via `RLCD_TIMING=1` inserts a `device.synchronize()` after each op, which
 serializes otherwise-pipelined kernel launches and inflates what it measures — it's useful for
 spotting *relative* outliers, but isolated benchmarks and end-to-end wall time are what the
 numbers above are based on.
@@ -322,24 +322,24 @@ numbers above are based on.
 
 ```bash
 # quick demo against a checkpoint directory (see laya.convaiinnovations.com for the weights)
-laya /path/to/laya-typed-decisions
+rlcd /path/to/laya-typed-decisions
 
 # ask a single choice question
-laya ask --model-dir /path/to/laya --state "..." --question "..." --option "a" --option "b"
+rlcd ask --model-dir /path/to/rlcd --state "..." --question "..." --option "a" --option "b"
 
 # answer a batch of typed questions against one state
-laya answer input.json answers.json --model-dir /path/to/laya-typed-decisions
+rlcd answer input.json answers.json --model-dir /path/to/laya-typed-decisions
 
 # answer a jev-questions-style batch file ({section: {state, questions}}) —
-# scripts/jev_batch.py drives `laya answer` once per section
+# scripts/jev_batch.py drives `rlcd answer` once per section
 scripts/jev_batch.py questions.json answers.json --model-dir /path/to/laya-typed-decisions
 
 # serve the Jev/Simple-Jev v1 protocol (POST /v1/classifier, GET /health, ...)
-laya serve                                    # default checkpoint, 127.0.0.1:8000
-laya serve --model /path/to/laya --port 9000 # explicit checkpoint + port
+rlcd serve                                    # default checkpoint, 127.0.0.1:8000
+rlcd serve --model /path/to/rlcd --port 9000 # explicit checkpoint + port
 
 # RLCD training over a JSONL dataset
-laya train /path/to/laya dataset.jsonl --epochs 3
+rlcd train /path/to/rlcd dataset.jsonl --epochs 3
 ```
 
 Not affiliated with Convai Innovations; this is an independent reimplementation for the Rust

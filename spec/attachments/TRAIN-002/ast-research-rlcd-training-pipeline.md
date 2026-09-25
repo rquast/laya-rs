@@ -62,7 +62,7 @@ no new model-dependent tests are needed for this work unit.
 
 ## Callers
 
-- `src/main.rs:156-158` — `laya train` CLI builds `RlcdConfig`, `Trainer::load`, `train_jsonl`.
+- `src/main.rs:156-158` — `rlcd train` CLI builds `RlcdConfig`, `Trainer::load`, `train_jsonl`.
 - `src/train.rs` — `train_jsonl` -> `encode_record` + `train_step`; `train_step` -> `pack_groups` -> `collate_items` -> `td_lambda_targets`.
 - No production callers of `make_token_batches` currently (it is the budget-aware
   length-bucketing counterpart of `pack_groups` and is pinned by tests directly);

@@ -4,7 +4,7 @@
 @JEV-007
 Feature: Jev protocol conformance test suite (mirroring the reference tests)
   """
-  tests/jev_conformance.rs (integration) + tests/jev_conformance/*.json fixtures — HTTP-level conformance suite pinning laya-rs to the Jev/Simple-Jev protocol, mirroring simple-jev test_laya.py (contract) + test_api.py (validation). Two tiers: (1) weight-free — axum::Router::oneshot against build_router with a mock Answerer (no checkpoint, no GPU): validation matrix, alias, health, openapi shape, 429 queue with a blocking mock, 500 recovery; (2) model-gated (LAYA_TEST_MODEL env var, the repo's established convention) — start_server with a real RLAgent on an ephemeral port + tokio/hyper client: mixed choice/score/noul round-trip, wrong model 422, context overflow 422 (model never called), chat history, media/tool rejection, raw_logits rejection, numerical sanity (choice probs sum ~1, confidence = max, score in [0,N-1], noul in [0,1]) and determinism (identical request twice -> identical answers). Fixtures reuse the README refund example. Pass criteria: all weight-free scenarios pass on plain `cargo test`; model-gated scenarios pass under LAYA_TEST_MODEL and are skipped (not failed) otherwise; cargo clippy --all-targets clean.
+  tests/jev_conformance.rs (integration) + tests/jev_conformance/*.json fixtures — HTTP-level conformance suite pinning rlcd-rs to the Jev/Simple-Jev protocol, mirroring simple-jev test_laya.py (contract) + test_api.py (validation). Two tiers: (1) weight-free — axum::Router::oneshot against build_router with a mock Answerer (no checkpoint, no GPU): validation matrix, alias, health, openapi shape, 429 queue with a blocking mock, 500 recovery; (2) model-gated (LAYA_TEST_MODEL env var, the repo's established convention) — start_server with a real RLAgent on an ephemeral port + tokio/hyper client: mixed choice/score/noul round-trip, wrong model 422, context overflow 422 (model never called), chat history, media/tool rejection, raw_logits rejection, numerical sanity (choice probs sum ~1, confidence = max, score in [0,N-1], noul in [0,1]) and determinism (identical request twice -> identical answers). Fixtures reuse the README refund example. Pass criteria: all weight-free scenarios pass on plain `cargo test`; model-gated scenarios pass under LAYA_TEST_MODEL and are skipped (not failed) otherwise; cargo clippy --all-targets clean.
   """
 
   # ========================================
@@ -18,7 +18,7 @@ Feature: Jev protocol conformance test suite (mirroring the reference tests)
   # ========================================
   Background: User Story
     As a server implementer
-    I want to prove with an automated suite that laya-rs stays protocol-compliant as it evolves
+    I want to prove with an automated suite that rlcd-rs stays protocol-compliant as it evolves
     So that regressions in validation, mapping, or queueing are caught before release, mirroring the reference implementation's own tests
 
   Scenario: The weight-free tier passes with no checkpoint and no GPU

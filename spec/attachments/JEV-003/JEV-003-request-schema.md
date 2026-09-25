@@ -21,7 +21,7 @@ pub struct ChatMessage { pub role: Role, pub content: String }
 pub enum Role { System, Developer, User, Assistant }
 ```
 
-`Question` reuses `laya::Question` (the existing `QType`/criteria structs from
+`Question` reuses `rlcd::Question` (the existing `QType`/criteria structs from
 `src/schema.rs`) — the only difference from `batching::RawQuestion` is
 *strictness*: unknown question fields and unknown criterion keys are errors,
 criteria descriptions must be string/object/array/null (non-strings
@@ -78,7 +78,7 @@ with different `param`/`type` values.
 
 The protocol's `canonical()` (simple-jev `common/prompt_builder.py`):
 strings pass through; objects/arrays are serialized as deterministic JSON
-(compact, keys sorted where objects, `null` for null entries). laya-rs must
+(compact, keys sorted where objects, `null` for null entries). rlcd-rs must
 port this byte-for-byte for `instructions` and criteria descriptions, since
 it becomes prompt text via `schema::build_sequence`.
 

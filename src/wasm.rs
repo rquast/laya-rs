@@ -1,4 +1,4 @@
-//! wasm-bindgen bindings for running laya in the browser.
+//! wasm-bindgen bindings for running rlcd in the browser.
 //!
 //! Model files (`rl_agent_config.json`, `tokenizer/tokenizer.json`,
 //! `tokenizer/tokenizer_config.json`, `encoder/config.json`,
@@ -7,7 +7,7 @@
 //! filesystem here. Questions and answers go through JSON strings so the JS
 //! side never needs a Rust struct layout; the schema is exactly
 //! [`crate::batching::RawQuestion`] (`{"type": "choice"|"score"|"noul",
-//! "instructions": ..., "criteria": ...}`), the same shape `laya answer`
+//! "instructions": ..., "criteria": ...}`), the same shape `rlcd answer`
 //! reads from its input file.
 
 use std::collections::BTreeMap;
@@ -77,7 +77,7 @@ impl WasmAgent {
     /// `questions_json` is a JSON object of `{qid: {type, instructions,
     /// criteria}}` (see [`crate::batching::RawQuestion`]). Returns JSON
     /// `{qid: {type, ...}}`, one answer per question, in the same shape
-    /// `laya answer` writes.
+    /// `rlcd answer` writes.
     #[wasm_bindgen]
     pub fn ask(&self, state_json: &str, questions_json: &str) -> Result<String, JsValue> {
         let state: Value = serde_json::from_str(state_json).map_err(to_js_err)?;

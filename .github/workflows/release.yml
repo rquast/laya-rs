@@ -4,9 +4,9 @@ name: release
 #
 #   git tag v0.x.0 && git push origin v0.x.0
 #
-# That builds `laya` for every supported CPU platform (plus a CUDA +
+# That builds `rlcd` for every supported CPU platform (plus a CUDA +
 # flash-attn build for Linux x86_64), attaches the archives, checksums, and
-# distro packages to the GitHub release, and publishes the laya-rs library
+# distro packages to the GitHub release, and publishes the rlcd-rs library
 # crate to crates.io.
 on:
   push:
@@ -60,9 +60,9 @@ jobs:
       - name: Package
         shell: bash
         run: |
-          name="laya-rs-${GITHUB_REF_NAME}-${{ matrix.target }}"
+          name="rlcd-rs-${GITHUB_REF_NAME}-${{ matrix.target }}"
           mkdir "$name"
-          cp "target/${{ matrix.target }}/release/laya" "$name/"
+          cp "target/${{ matrix.target }}/release/rlcd" "$name/"
           cp README.md "$name/"
           tar czf "$name.tar.gz" "$name"
           shasum -a 256 "$name.tar.gz" > "$name.tar.gz.sha256"
@@ -71,8 +71,8 @@ jobs:
         with:
           name: binary-${{ matrix.target }}
           path: |
-            laya-rs-*.tar.gz
-            laya-rs-*.tar.gz.sha256
+            rlcd-rs-*.tar.gz
+            rlcd-rs-*.tar.gz.sha256
           if-no-files-found: error
 
   # A second, CUDA + flash-attn build of the same binary, x86_64 Linux only
@@ -133,9 +133,9 @@ jobs:
       - name: Package
         shell: bash
         run: |
-          name="laya-rs-flash-attn-${GITHUB_REF_NAME}-x86_64-unknown-linux-gnu"
+          name="rlcd-rs-flash-attn-${GITHUB_REF_NAME}-x86_64-unknown-linux-gnu"
           mkdir "$name"
-          cp target/release/laya "$name/"
+          cp target/release/rlcd "$name/"
           cp README.md "$name/"
           tar czf "$name.tar.gz" "$name"
           sha256sum "$name.tar.gz" > "$name.tar.gz.sha256"
@@ -144,8 +144,8 @@ jobs:
         with:
           name: binary-x86_64-unknown-linux-gnu-flash-attn
           path: |
-            laya-rs-flash-attn-*.tar.gz
-            laya-rs-flash-attn-*.tar.gz.sha256
+            rlcd-rs-flash-attn-*.tar.gz
+            rlcd-rs-flash-attn-*.tar.gz.sha256
           if-no-files-found: error
 
   # Repackaging, not building: the .debs and the pacman package are assembled
@@ -173,12 +173,12 @@ jobs:
           build() { # <debian arch> <rust target>
             local arch="$1" triple="$2"
 
-            tar xzf "dist/laya-rs-${GITHUB_REF_NAME}-$triple.tar.gz"
-            local src="laya-rs-${GITHUB_REF_NAME}-$triple"
-            local root="stage/laya-rs-$arch"
+            tar xzf "dist/rlcd-rs-${GITHUB_REF_NAME}-$triple.tar.gz"
+            local src="rlcd-rs-${GITHUB_REF_NAME}-$triple"
+            local root="stage/rlcd-rs-$arch"
 
-            install -Dm755 "$src/laya" "$root/usr/bin/laya"
-            install -Dm644 "$src/README.md" "$root/usr/share/doc/laya-rs/README.md"
+            install -Dm755 "$src/rlcd" "$root/usr/bin/rlcd"
+            install -Dm644 "$src/README.md" "$root/usr/share/doc/rlcd-rs/README.md"
 
             # dpkg reports installed size in KiB, and dpkg-deb does not work
             # it out on its own — a missing or wrong value is what makes
@@ -199,7 +199,7 @@ jobs:
 
             # Everything ships as root:root regardless of who the runner is.
             dpkg-deb --root-owner-group --build "$root" \
-              "debs/laya-rs_${version}-1_${arch}.deb"
+              "debs/rlcd-rs_${version}-1_${arch}.deb"
           }
 
           build amd64 x86_64-unknown-linux-gnu
@@ -208,12 +208,12 @@ jobs:
           # The flash-attn build, x86_64 only, from its own archive and
           # control file (different Depends/Conflicts/Provides than the CPU
           # build).
-          tar xzf "dist/laya-rs-flash-attn-${GITHUB_REF_NAME}-x86_64-unknown-linux-gnu.tar.gz"
-          flash_src="laya-rs-flash-attn-${GITHUB_REF_NAME}-x86_64-unknown-linux-gnu"
-          flash_root="stage/laya-rs-flash-attn-amd64"
+          tar xzf "dist/rlcd-rs-flash-attn-${GITHUB_REF_NAME}-x86_64-unknown-linux-gnu.tar.gz"
+          flash_src="rlcd-rs-flash-attn-${GITHUB_REF_NAME}-x86_64-unknown-linux-gnu"
+          flash_root="stage/rlcd-rs-flash-attn-amd64"
 
-          install -Dm755 "$flash_src/laya" "$flash_root/usr/bin/laya"
-          install -Dm644 "$flash_src/README.md" "$flash_root/usr/share/doc/laya-rs-flash-attn/README.md"
+          install -Dm755 "$flash_src/rlcd" "$flash_root/usr/bin/rlcd"
+          install -Dm644 "$flash_src/README.md" "$flash_root/usr/share/doc/rlcd-rs-flash-attn/README.md"
 
           flash_size=$(du -ks "$flash_root/usr" | cut -f1)
 
@@ -229,7 +229,7 @@ jobs:
           fi
 
           dpkg-deb --root-owner-group --build "$flash_root" \
-            "debs/laya-rs-flash-attn_${version}-1_amd64.deb"
+            "debs/rlcd-rs-flash-attn_${version}-1_amd64.deb"
 
           cd debs
           for deb in *.deb; do shasum -a 256 "$deb" > "$deb.sha256"; done
@@ -244,7 +244,7 @@ jobs:
           mkdir -p pkg
           sed \
             -e "s/@VERSION@/$version/g" \
-            -e "s/@SHA_LINUX_X86_64@/$(sha256sum "dist/laya-rs-${GITHUB_REF_NAME}-x86_64-unknown-linux-gnu.tar.gz" | cut -d' ' -f1)/" \
+            -e "s/@SHA_LINUX_X86_64@/$(sha256sum "dist/rlcd-rs-${GITHUB_REF_NAME}-x86_64-unknown-linux-gnu.tar.gz" | cut -d' ' -f1)/" \
             "packaging/pacman/PKGBUILD" > "pkg/PKGBUILD"
 
           if grep -qE '@[A-Z_]+@' "pkg/PKGBUILD"; then
@@ -256,8 +256,8 @@ jobs:
           # The release does not exist yet, so the archive is placed under the
           # name the source line gives it: makepkg checksums what is already
           # there instead of fetching the URL.
-          cp "dist/laya-rs-${GITHUB_REF_NAME}-x86_64-unknown-linux-gnu.tar.gz" \
-             "pkg/laya-rs-$version-x86_64.tar.gz"
+          cp "dist/rlcd-rs-${GITHUB_REF_NAME}-x86_64-unknown-linux-gnu.tar.gz" \
+             "pkg/rlcd-rs-$version-x86_64.tar.gz"
 
           # makepkg refuses to run as root, so the build runs as an unprivileged
           # user inside the container — and the tree is handed back to the
@@ -271,18 +271,18 @@ jobs:
               chown -R "$OWNER" /pkg
             '
 
-          [ -f "pkg/laya-rs-$version-1-x86_64.pkg.tar.zst" ]
+          [ -f "pkg/rlcd-rs-$version-1-x86_64.pkg.tar.zst" ]
           cd pkg
-          shasum -a 256 "laya-rs-$version-1-x86_64.pkg.tar.zst" \
-            > "laya-rs-$version-1-x86_64.pkg.tar.zst.sha256"
+          shasum -a 256 "rlcd-rs-$version-1-x86_64.pkg.tar.zst" \
+            > "rlcd-rs-$version-1-x86_64.pkg.tar.zst.sha256"
           cd ..
 
           # Same idea, flash-attn build: its own PKGBUILD (different depends,
-          # conflicts/provides against laya-rs) and its own archive.
+          # conflicts/provides against rlcd-rs) and its own archive.
           mkdir -p pkg-flash-attn
           sed \
             -e "s/@VERSION@/$version/g" \
-            -e "s/@SHA_LINUX_X86_64_FLASH_ATTN@/$(sha256sum "dist/laya-rs-flash-attn-${GITHUB_REF_NAME}-x86_64-unknown-linux-gnu.tar.gz" | cut -d' ' -f1)/" \
+            -e "s/@SHA_LINUX_X86_64_FLASH_ATTN@/$(sha256sum "dist/rlcd-rs-flash-attn-${GITHUB_REF_NAME}-x86_64-unknown-linux-gnu.tar.gz" | cut -d' ' -f1)/" \
             "packaging/pacman/PKGBUILD-flash-attn" > "pkg-flash-attn/PKGBUILD"
 
           if grep -qE '@[A-Z_]+@' "pkg-flash-attn/PKGBUILD"; then
@@ -291,8 +291,8 @@ jobs:
             exit 1
           fi
 
-          cp "dist/laya-rs-flash-attn-${GITHUB_REF_NAME}-x86_64-unknown-linux-gnu.tar.gz" \
-             "pkg-flash-attn/laya-rs-flash-attn-$version-x86_64.tar.gz"
+          cp "dist/rlcd-rs-flash-attn-${GITHUB_REF_NAME}-x86_64-unknown-linux-gnu.tar.gz" \
+             "pkg-flash-attn/rlcd-rs-flash-attn-$version-x86_64.tar.gz"
 
           docker run --rm -v "$PWD/pkg-flash-attn:/pkg" -e "OWNER=$(id -u):$(id -g)" \
             archlinux:base-devel bash -c '
@@ -303,18 +303,18 @@ jobs:
               chown -R "$OWNER" /pkg
             '
 
-          [ -f "pkg-flash-attn/laya-rs-flash-attn-$version-1-x86_64.pkg.tar.zst" ]
+          [ -f "pkg-flash-attn/rlcd-rs-flash-attn-$version-1-x86_64.pkg.tar.zst" ]
           cd pkg-flash-attn
-          shasum -a 256 "laya-rs-flash-attn-$version-1-x86_64.pkg.tar.zst" \
-            > "laya-rs-flash-attn-$version-1-x86_64.pkg.tar.zst.sha256"
+          shasum -a 256 "rlcd-rs-flash-attn-$version-1-x86_64.pkg.tar.zst" \
+            > "rlcd-rs-flash-attn-$version-1-x86_64.pkg.tar.zst.sha256"
           cd ..
 
           # Copied alongside the CPU package rather than kept in its own
           # build directory: the artifact upload below infers its root from
           # the common ancestor of the paths it's given, and one flat `pkg/`
           # keeps that root the same as before instead of nesting it.
-          cp pkg-flash-attn/laya-rs-flash-attn-$version-1-x86_64.pkg.tar.zst \
-             pkg-flash-attn/laya-rs-flash-attn-$version-1-x86_64.pkg.tar.zst.sha256 \
+          cp pkg-flash-attn/rlcd-rs-flash-attn-$version-1-x86_64.pkg.tar.zst \
+             pkg-flash-attn/rlcd-rs-flash-attn-$version-1-x86_64.pkg.tar.zst.sha256 \
              pkg/
 
       # A package that installs but declares the wrong architecture, or that
@@ -322,50 +322,50 @@ jobs:
       - name: Check
         run: |
           version="${GITHUB_REF_NAME#v}"
-          dpkg-deb --info "debs/laya-rs_${version}-1_amd64.deb"
+          dpkg-deb --info "debs/rlcd-rs_${version}-1_amd64.deb"
           # `grep -q` would close its end of the pipe as soon as it matches,
           # sending dpkg-deb's underlying `tar` a SIGPIPE ("tar: stdout:
           # write error", reported as "dpkg-deb: error: tar subprocess
           # returned error exit status 2") — a race that intermittently
           # fails this step under `pipefail` even though the file is there.
           # Draining the whole stream instead avoids it.
-          dpkg-deb --contents "debs/laya-rs_${version}-1_amd64.deb" | grep "./usr/bin/laya" > /dev/null
-          [ "$(dpkg-deb --field "debs/laya-rs_${version}-1_arm64.deb" Architecture)" = arm64 ]
+          dpkg-deb --contents "debs/rlcd-rs_${version}-1_amd64.deb" | grep "./usr/bin/rlcd" > /dev/null
+          [ "$(dpkg-deb --field "debs/rlcd-rs_${version}-1_arm64.deb" Architecture)" = arm64 ]
 
           # The flash-attn .deb declares a Depends on libcuda1, which the
           # runner doesn't have and shouldn't be made to install (that would
           # pull in an NVIDIA driver package on a CI box). Check its metadata
           # and contents instead of installing it.
-          dpkg-deb --info "debs/laya-rs-flash-attn_${version}-1_amd64.deb"
-          dpkg-deb --contents "debs/laya-rs-flash-attn_${version}-1_amd64.deb" | grep "./usr/bin/laya" > /dev/null
-          [ "$(dpkg-deb --field "debs/laya-rs-flash-attn_${version}-1_amd64.deb" Depends)" = "libcuda1" ]
-          [ "$(dpkg-deb --field "debs/laya-rs-flash-attn_${version}-1_amd64.deb" Conflicts)" = "laya-rs" ]
+          dpkg-deb --info "debs/rlcd-rs-flash-attn_${version}-1_amd64.deb"
+          dpkg-deb --contents "debs/rlcd-rs-flash-attn_${version}-1_amd64.deb" | grep "./usr/bin/rlcd" > /dev/null
+          [ "$(dpkg-deb --field "debs/rlcd-rs-flash-attn_${version}-1_amd64.deb" Depends)" = "libcuda1" ]
+          [ "$(dpkg-deb --field "debs/rlcd-rs-flash-attn_${version}-1_amd64.deb" Conflicts)" = "rlcd-rs" ]
 
           # The runner is amd64, so only that one can actually be installed and
           # run — which is the check that matters: `--version` proves the
           # binary survived the round trip.
-          sudo dpkg -i "debs/laya-rs_${version}-1_amd64.deb" || sudo apt-get install -fy
-          [ "$(laya --version)" = "laya $version" ]
-          sudo dpkg -r laya-rs
+          sudo dpkg -i "debs/rlcd-rs_${version}-1_amd64.deb" || sudo apt-get install -fy
+          [ "$(rlcd --version)" = "rlcd $version" ]
+          sudo dpkg -r rlcd-rs
 
           # The pacman package cannot be installed on the runner, but its
           # metadata and contents can be read back out of the archive.
           docker run --rm -v "$PWD/pkg:/pkg" archlinux:base-devel bash -c "
             set -eu
-            pkg=/pkg/laya-rs-$version-1-x86_64.pkg.tar.zst
-            bsdtar -xOf \"\$pkg\" .PKGINFO | grep -qx 'pkgname = laya-rs'
+            pkg=/pkg/rlcd-rs-$version-1-x86_64.pkg.tar.zst
+            bsdtar -xOf \"\$pkg\" .PKGINFO | grep -qx 'pkgname = rlcd-rs'
             bsdtar -xOf \"\$pkg\" .PKGINFO | grep -qx 'pkgver = $version-1'
-            bsdtar -tf \"\$pkg\" | grep -qx 'usr/bin/laya'
+            bsdtar -tf \"\$pkg\" | grep -qx 'usr/bin/rlcd'
           "
 
           # Same read-back check for the flash-attn pacman package.
           docker run --rm -v "$PWD/pkg:/pkg" archlinux:base-devel bash -c "
             set -eu
-            pkg=/pkg/laya-rs-flash-attn-$version-1-x86_64.pkg.tar.zst
-            bsdtar -xOf \"\$pkg\" .PKGINFO | grep -qx 'pkgname = laya-rs-flash-attn'
+            pkg=/pkg/rlcd-rs-flash-attn-$version-1-x86_64.pkg.tar.zst
+            bsdtar -xOf \"\$pkg\" .PKGINFO | grep -qx 'pkgname = rlcd-rs-flash-attn'
             bsdtar -xOf \"\$pkg\" .PKGINFO | grep -qx 'pkgver = $version-1'
-            bsdtar -xOf \"\$pkg\" .PKGINFO | grep -qx 'conflict = laya-rs'
-            bsdtar -tf \"\$pkg\" | grep -qx 'usr/bin/laya'
+            bsdtar -xOf \"\$pkg\" .PKGINFO | grep -qx 'conflict = rlcd-rs'
+            bsdtar -tf \"\$pkg\" | grep -qx 'usr/bin/rlcd'
           "
 
       - uses: actions/upload-artifact@v4
@@ -420,17 +420,17 @@ jobs:
 
             | platform | archive |
             | --- | --- |
-            | macOS Apple Silicon | `laya-rs-${{ github.ref_name }}-aarch64-apple-darwin.tar.gz` |
-            | Linux x86_64 | `laya-rs-${{ github.ref_name }}-x86_64-unknown-linux-gnu.tar.gz` |
-            | Linux aarch64 | `laya-rs-${{ github.ref_name }}-aarch64-unknown-linux-gnu.tar.gz` |
+            | macOS Apple Silicon | `rlcd-rs-${{ github.ref_name }}-aarch64-apple-darwin.tar.gz` |
+            | Linux x86_64 | `rlcd-rs-${{ github.ref_name }}-x86_64-unknown-linux-gnu.tar.gz` |
+            | Linux aarch64 | `rlcd-rs-${{ github.ref_name }}-aarch64-unknown-linux-gnu.tar.gz` |
 
-            Each archive holds `laya` and the README.
+            Each archive holds `rlcd` and the README.
 
             ## CUDA + flash-attn build
 
             A CUDA-enabled build with laya's fused/unpadded flash-attention path
             (`--features flash-attn`), Linux x86_64 only:
-            `laya-rs-flash-attn-${{ github.ref_name }}-x86_64-unknown-linux-gnu.tar.gz`.
+            `rlcd-rs-flash-attn-${{ github.ref_name }}-x86_64-unknown-linux-gnu.tar.gz`.
             Requires an Ampere-or-newer NVIDIA GPU (sm80+) and a host CUDA driver
             compatible with the toolkit version it was built against (see
             `packaging/README.md`).
@@ -438,28 +438,28 @@ jobs:
             ## Debian packages
 
             ```
-            sudo dpkg -i laya-rs_${{ steps.version.outputs.version }}-1_amd64.deb
+            sudo dpkg -i rlcd-rs_${{ steps.version.outputs.version }}-1_amd64.deb
             ```
 
             | platform | package |
             | --- | --- |
-            | Debian/Ubuntu amd64 | `laya-rs_${{ steps.version.outputs.version }}-1_amd64.deb` |
-            | Debian/Ubuntu arm64 | `laya-rs_${{ steps.version.outputs.version }}-1_arm64.deb` |
-            | Debian/Ubuntu amd64, CUDA + flash-attn | `laya-rs-flash-attn_${{ steps.version.outputs.version }}-1_amd64.deb` |
+            | Debian/Ubuntu amd64 | `rlcd-rs_${{ steps.version.outputs.version }}-1_amd64.deb` |
+            | Debian/Ubuntu arm64 | `rlcd-rs_${{ steps.version.outputs.version }}-1_arm64.deb` |
+            | Debian/Ubuntu amd64, CUDA + flash-attn | `rlcd-rs-flash-attn_${{ steps.version.outputs.version }}-1_amd64.deb` |
 
-            `laya-rs-flash-attn` conflicts with `laya-rs` (both install the same
+            `rlcd-rs-flash-attn` conflicts with `rlcd-rs` (both install the same
             binary name), so only one can be installed at a time. It depends on
             `libcuda1`; see the CUDA build note above for driver compatibility.
 
             ## Arch package
 
             ```
-            sudo pacman -U laya-rs-${{ steps.version.outputs.version }}-1-x86_64.pkg.tar.zst
+            sudo pacman -U rlcd-rs-${{ steps.version.outputs.version }}-1-x86_64.pkg.tar.zst
             ```
 
             A CUDA + flash-attn build is published the same way, as
-            `laya-rs-flash-attn-${{ steps.version.outputs.version }}-1-x86_64.pkg.tar.zst`,
-            depending on `nvidia-utils` and conflicting with `laya-rs`.
+            `rlcd-rs-flash-attn-${{ steps.version.outputs.version }}-1-x86_64.pkg.tar.zst`,
+            depending on `nvidia-utils` and conflicting with `rlcd-rs`.
 
             The same package is published to the signed pacman repository at
             `apiplant.github.io/pacman`, which is the way to get updates with
@@ -469,7 +469,7 @@ jobs:
             curl -sSfL https://apiplant.github.io/pacman/apiplant.gpg -o /tmp/apiplant.gpg
             keyid=$(gpg --show-keys --with-colons /tmp/apiplant.gpg | awk -F: '/^pub:/ { print $5; exit }') && sudo pacman-key --add /tmp/apiplant.gpg && sudo pacman-key --finger "$keyid" && sudo pacman-key --lsign-key "$keyid"
             printf '\n[apiplant]\nSigLevel = Required DatabaseOptional\nServer = https://apiplant.github.io/pacman/$arch\n' | sudo tee -a /etc/pacman.conf > /dev/null
-            sudo pacman -Sy laya-rs
+            sudo pacman -Sy rlcd-rs
             ```
 
             ## apt
@@ -481,21 +481,21 @@ jobs:
             ```
             curl -sSfL https://apt.apiplant.com/apiplant-archive-keyring.gpg | sudo tee /usr/share/keyrings/apiplant.gpg > /dev/null
             echo "deb [signed-by=/usr/share/keyrings/apiplant.gpg] https://apt.apiplant.com stable main" | sudo tee /etc/apt/sources.list.d/apiplant.list > /dev/null
-            sudo apt update && sudo apt install laya-rs
+            sudo apt update && sudo apt install rlcd-rs
             ```
 
             ## Homebrew
 
             ```
             brew tap apiplant/tap
-            brew install apiplant/tap/laya-rs
+            brew install apiplant/tap/rlcd-rs
             ```
 
             ## crates.io
 
             ```
-            cargo install laya-rs     # binary
-            cargo add laya-rs         # library
+            cargo install rlcd-rs     # binary
+            cargo add rlcd-rs         # library
             ```
 
             Each archive and package has a matching `.sha256` file.
@@ -545,21 +545,21 @@ jobs:
         if: env.TAP_TOKEN != ''
         run: |
           version="${GITHUB_REF_NAME#v}"
-          sha() { shasum -a 256 "dist/laya-rs-${GITHUB_REF_NAME}-$1.tar.gz" | cut -d' ' -f1; }
+          sha() { shasum -a 256 "dist/rlcd-rs-${GITHUB_REF_NAME}-$1.tar.gz" | cut -d' ' -f1; }
 
           sed \
             -e "s/@VERSION@/$version/g" \
             -e "s/@SHA_MACOS_ARM64@/$(sha aarch64-apple-darwin)/" \
             -e "s/@SHA_LINUX_X86_64@/$(sha x86_64-unknown-linux-gnu)/" \
             -e "s/@SHA_LINUX_ARM64@/$(sha aarch64-unknown-linux-gnu)/" \
-            "packaging/homebrew/laya-rs.rb" > "/tmp/laya-rs.rb"
+            "packaging/homebrew/rlcd-rs.rb" > "/tmp/rlcd-rs.rb"
 
           # A leftover placeholder means an archive was missing and `sha`
           # returned nothing — publishing that formula would break `brew
           # install` for everyone on that platform.
-          if grep -qE '@[A-Z_]+@' "/tmp/laya-rs.rb"; then
-            echo "::error::unsubstituted placeholder in laya-rs.rb" >&2
-            grep -nE '@[A-Z_]+@' "/tmp/laya-rs.rb" >&2
+          if grep -qE '@[A-Z_]+@' "/tmp/rlcd-rs.rb"; then
+            echo "::error::unsubstituted placeholder in rlcd-rs.rb" >&2
+            grep -nE '@[A-Z_]+@' "/tmp/rlcd-rs.rb" >&2
             exit 1
           fi
 
@@ -570,15 +570,15 @@ jobs:
           git clone --depth 1 \
             "https://x-access-token:${TAP_TOKEN}@github.com/apiplant/homebrew-tap.git" tap
           mkdir -p tap/Formula
-          cp /tmp/laya-rs.rb tap/Formula/laya-rs.rb
+          cp /tmp/rlcd-rs.rb tap/Formula/rlcd-rs.rb
 
           cd tap
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Formula/laya-rs.rb
+          git add Formula/rlcd-rs.rb
           # Re-running a release for the same tag is a no-op rather than an error.
           git diff --cached --quiet && exit 0
-          git commit -m "laya-rs $version"
+          git commit -m "rlcd-rs $version"
           git push
 
   # The apt repository is cumulative: the new .debs are copied into the pool
@@ -631,10 +631,10 @@ jobs:
           git clone --depth 1 \
             "https://x-access-token:${APT_REPO_TOKEN}@github.com/apiplant/apt.git" repo
 
-          # `pool/main/l/laya-rs/` is the layout apt expects: component,
+          # `pool/main/r/rlcd-rs/` is the layout apt expects: component,
           # then the first letter of the source package, then the package.
-          mkdir -p repo/pool/main/l/laya-rs
-          cp debs/*.deb repo/pool/main/l/laya-rs/
+          mkdir -p repo/pool/main/r/rlcd-rs
+          cp debs/*.deb repo/pool/main/r/rlcd-rs/
 
           size=$(du -sm repo/pool | cut -f1)
           if [ "$size" -gt 700 ]; then
@@ -701,7 +701,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           git diff --cached --quiet && exit 0
-          git commit -m "laya-rs $version"
+          git commit -m "rlcd-rs $version"
           git push
 
   # The pacman repository is cumulative: the new package file is copied into
@@ -794,5 +794,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           git diff --cached --quiet && exit 0
-          git commit -m "laya-rs $version"
+          git commit -m "rlcd-rs $version"
           git push

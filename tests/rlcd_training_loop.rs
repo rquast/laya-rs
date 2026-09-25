@@ -14,11 +14,11 @@
  * (CLI path, gated on LAYA_TEST_MODEL).
  */
 
-use laya::batching::{
+use rlcd::batching::{
     collate_items, encode_record, make_token_batches, pack_groups, td_lambda_targets, Item,
     Record,
 };
-use laya::schema::{QType, SpecialTokens};
+use rlcd::schema::{QType, SpecialTokens};
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 use std::collections::HashMap;

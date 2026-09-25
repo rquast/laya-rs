@@ -12,11 +12,11 @@
       "status": "done",
       "createdAt": "2026-09-21T23:33:39.275Z",
       "updatedAt": "2026-09-21T23:45:50.594Z",
-      "description": "`laya ask --state ... --question ... --option a --option b` routes the state to a checkpoint, resolves its directory, answers one choice question, and prints choice/confidence/act probability and per-option probabilities.",
+      "description": "`rlcd ask --state ... --question ... --option a --option b` routes the state to a checkpoint, resolves its directory, answers one choice question, and prints choice/confidence/act probability and per-option probabilities.",
       "epic": "decision-inference",
       "children": [],
       "userStory": {
-        "role": "user running the laya CLI",
+        "role": "user running the rlcd CLI",
         "action": "ask a single choice question against a state",
         "benefit": "smoke-test a checkpoint without writing a JSON batch file"
       },
@@ -57,7 +57,7 @@
         },
         {
           "id": 2,
-          "text": "`laya ask` requires --state and --question; --option is a repeatable flag and each value becomes a choice criterion with no description",
+          "text": "`rlcd ask` requires --state and --question; --option is a repeatable flag and each value becomes a choice criterion with no description",
           "deleted": false,
           "createdAt": "2026-09-21T23:38:14.998Z"
         }
@@ -66,13 +66,13 @@
       "examples": [
         {
           "id": 0,
-          "text": "Running `laya ask --state \"We were billed twice\" --question \"Which team should handle this?\" --option billing --option technical` routes the state, loads the routed checkpoint, and prints the chosen option with its probability distribution",
+          "text": "Running `rlcd ask --state \"We were billed twice\" --question \"Which team should handle this?\" --option billing --option technical` routes the state, loads the routed checkpoint, and prints the chosen option with its probability distribution",
           "deleted": false,
           "createdAt": "2026-09-21T23:37:49.458Z"
         },
         {
           "id": 1,
-          "text": "Running `laya ask --model /path/to/laya-typed-decisions --state \"...\" --question \"...\" --option a --option b` loads the given checkpoint directory as-is, skipping routing and models-root resolution",
+          "text": "Running `rlcd ask --model /path/to/laya-typed-decisions --state \"...\" --question \"...\" --option a --option b` loads the given checkpoint directory as-is, skipping routing and models-root resolution",
           "deleted": false,
           "createdAt": "2026-09-21T23:38:21.629Z"
         }
@@ -105,7 +105,7 @@
       "status": "done",
       "createdAt": "2026-09-21T23:33:41.841Z",
       "updatedAt": "2026-09-21T23:52:58.943Z",
-      "description": "`laya answer input.json answers.json --model-variant ...` reads a {state, questions} JSON file, answers the batch of typed questions (choice/score/noul) in one forward pass, prints timing to stderr, and writes {qid: answer} JSON to the output file.",
+      "description": "`rlcd answer input.json answers.json --model-variant ...` reads a {state, questions} JSON file, answers the batch of typed questions (choice/score/noul) in one forward pass, prints timing to stderr, and writes {qid: answer} JSON to the output file.",
       "epic": "decision-inference",
       "children": [],
       "stateHistory": [
@@ -131,7 +131,7 @@
         }
       ],
       "userStory": {
-        "role": "user running the laya CLI",
+        "role": "user running the rlcd CLI",
         "action": "answer a batch of typed questions against one state in a single forward pass",
         "benefit": "get typed answers for a whole question battery without writing a Rust program"
       },
@@ -165,19 +165,19 @@
       "examples": [
         {
           "id": 0,
-          "text": "A user runs `laya answer input.json answers.json --model /path/to/laya-typed-decisions` where input.json holds a state and three questions (a choice, a score, a noul); the command writes answers.json with one typed answer per question id and prints a per-question timing summary to stderr",
+          "text": "A user runs `rlcd answer input.json answers.json --model /path/to/laya-typed-decisions` where input.json holds a state and three questions (a choice, a score, a noul); the command writes answers.json with one typed answer per question id and prints a per-question timing summary to stderr",
           "deleted": false,
           "createdAt": "2026-09-21T23:47:25.405Z"
         },
         {
           "id": 1,
-          "text": "Running `laya answer` on an input file with no `state` field fails with a `missing state` error",
+          "text": "Running `rlcd answer` on an input file with no `state` field fails with a `missing state` error",
           "deleted": false,
           "createdAt": "2026-09-21T23:47:32.321Z"
         },
         {
           "id": 2,
-          "text": "Running `laya answer input.json answers.json --only churn_risk` answers only the question with id `churn_risk` and writes a single-entry answers.json",
+          "text": "Running `rlcd answer input.json answers.json --only churn_risk` answers only the question with id `churn_risk` and writes a single-entry answers.json",
           "deleted": false,
           "createdAt": "2026-09-21T23:47:36.555Z"
         }
@@ -210,7 +210,7 @@
       "status": "done",
       "createdAt": "2026-09-21T23:34:01.991Z",
       "updatedAt": "2026-09-21T23:59:12.062Z",
-      "description": "Running `laya` with no subcommand routes the state, loads the routed checkpoint, and answers a built-in 3-question demo (choice department / score urgency / noul churn) printing one line per answer.",
+      "description": "Running `rlcd` with no subcommand routes the state, loads the routed checkpoint, and answers a built-in 3-question demo (choice department / score urgency / noul churn) printing one line per answer.",
       "epic": "decision-inference",
       "children": [],
       "stateHistory": [
@@ -236,14 +236,14 @@
         }
       ],
       "userStory": {
-        "role": "user who just installed laya",
-        "action": "run `laya` with no subcommand to see the decision engine answer a demo question battery against a body of text",
+        "role": "user who just installed rlcd",
+        "action": "run `rlcd` with no subcommand to see the decision engine answer a demo question battery against a body of text",
         "benefit": "a quick end-to-end smoke test of the installed binary"
       },
       "rules": [
         {
           "id": 0,
-          "text": "With no subcommand, `laya` takes a positional state body (defaulting to \"We were billed twice for March. Please refund the duplicate.\") and builds a demo state JSON {subject: \"Duplicate charge on invoice 4411\", body: <state>}",
+          "text": "With no subcommand, `rlcd` takes a positional state body (defaulting to \"We were billed twice for March. Please refund the duplicate.\") and builds a demo state JSON {subject: \"Duplicate charge on invoice 4411\", body: <state>}",
           "deleted": false,
           "createdAt": "2026-09-21T23:53:15.669Z"
         },
@@ -264,13 +264,13 @@
       "examples": [
         {
           "id": 0,
-          "text": "A user runs `laya` with no arguments at all and the demo runs against the built-in default state body \"We were billed twice for March. Please refund the duplicate.\"",
+          "text": "A user runs `rlcd` with no arguments at all and the demo runs against the built-in default state body \"We were billed twice for March. Please refund the duplicate.\"",
           "deleted": false,
           "createdAt": "2026-09-21T23:53:48.210Z"
         },
         {
           "id": 1,
-          "text": "A user runs `laya \"The server has been down since Tuesday and no one has replied\"` and sees the routed checkpoint line plus three answer lines on stdout — a department choice with option probabilities, an urgency score with level probabilities, and a churn_risk noul value",
+          "text": "A user runs `rlcd \"The server has been down since Tuesday and no one has replied\"` and sees the routed checkpoint line plus three answer lines on stdout — a department choice with option probabilities, an urgency score with level probabilities, and a churn_risk noul value",
           "deleted": false,
           "createdAt": "2026-09-21T23:56:09.324Z"
         }
@@ -303,7 +303,7 @@
       "status": "done",
       "createdAt": "2026-09-21T23:34:07.662Z",
       "updatedAt": "2026-09-22T00:38:52.303Z",
-      "description": "`laya train MODEL_DIR dataset.jsonl --epochs N [--lr --group-size --sigma --save-to]` loads a checkpoint into a Trainer, runs the RLCD loop over the JSONL records, logs per-epoch loss/reward, and saves trained weights (default `<model_dir>/model.trained.safetensors`).",
+      "description": "`rlcd train MODEL_DIR dataset.jsonl --epochs N [--lr --group-size --sigma --save-to]` loads a checkpoint into a Trainer, runs the RLCD loop over the JSONL records, logs per-epoch loss/reward, and saves trained weights (default `<model_dir>/model.trained.safetensors`).",
       "epic": "training-calibration",
       "children": [],
       "stateHistory": [
@@ -330,7 +330,7 @@
       ],
       "userStory": {
         "role": "ML practitioner",
-        "action": "fine-tune the decision model via `laya train` over a JSONL dataset",
+        "action": "fine-tune the decision model via `rlcd train` over a JSONL dataset",
         "benefit": "the shipped checkpoint is tuned to my domain's decision labels"
       },
       "rules": [
@@ -357,7 +357,7 @@
       "examples": [
         {
           "id": 0,
-          "text": "Running `laya train /path/to/checkpoint train.jsonl` (1 epoch) prints an epoch summary line and writes /path/to/checkpoint/model.trained.safetensors",
+          "text": "Running `rlcd train /path/to/checkpoint train.jsonl` (1 epoch) prints an epoch summary line and writes /path/to/checkpoint/model.trained.safetensors",
           "deleted": false,
           "createdAt": "2026-09-22T00:35:44.880Z"
         },
@@ -535,7 +535,7 @@
         },
         {
           "id": 2,
-          "text": "Failing both, the variant's cached standalone download ($XDG_CACHE_HOME/laya-rs/<repo-name>) is returned, downloading missing files from Hugging Face first; LAYA_OFFLINE makes a missing file an error instead of a network fetch",
+          "text": "Failing both, the variant's cached standalone download ($XDG_CACHE_HOME/rlcd-rs/<repo-name>) is returned, downloading missing files from Hugging Face first; RLCD_OFFLINE makes a missing file an error instead of a network fetch",
           "deleted": false,
           "createdAt": "2026-09-22T00:39:51.377Z"
         }
@@ -549,7 +549,7 @@
       "examples": [
         {
           "id": 0,
-          "text": "With a family root that contains the variant's subfolder, `laya ask` loads the subfolder checkpoint directly — no cache lookup, no download",
+          "text": "With a family root that contains the variant's subfolder, `rlcd ask` loads the subfolder checkpoint directly — no cache lookup, no download",
           "deleted": false,
           "createdAt": "2026-09-22T00:39:55.038Z"
         },
@@ -561,7 +561,7 @@
         },
         {
           "id": 2,
-          "text": "When a checkpoint file is missing from the cache and LAYA_OFFLINE is set, resolution fails with a clear error telling the user to unset it or pass --model",
+          "text": "When a checkpoint file is missing from the cache and RLCD_OFFLINE is set, resolution fails with a clear error telling the user to unset it or pass --model",
           "deleted": false,
           "createdAt": "2026-09-22T00:40:26.601Z"
         }
@@ -570,7 +570,7 @@
       "architectureNotes": [
         {
           "id": 0,
-          "text": "src/model_path.rs (native-only): resolve(default_variant_key, explicit, requested_variant, family_root). VARIANTS: typed-decisions (hf convaiinnovations/laya-typed-decisions), multilingual (hf convaiinnovations/laya-multilingual). Order: explicit as-is -> family root subfolder (candidates: hf repo basename then subfolder; must contain model.safetensors) -> download::download_variant (cache $XDG_CACHE_HOME/laya-rs/<repo-basename>, 5 REQUIRED_FILES, skip existing, LAYA_OFFLINE -> bail with 'unset it or pass --model').",
+          "text": "src/model_path.rs (native-only): resolve(default_variant_key, explicit, requested_variant, family_root). VARIANTS: typed-decisions (hf convaiinnovations/laya-typed-decisions), multilingual (hf convaiinnovations/laya-multilingual). Order: explicit as-is -> family root subfolder (candidates: hf repo basename then subfolder; must contain model.safetensors) -> download::download_variant (cache $XDG_CACHE_HOME/rlcd-rs/<repo-basename>, 5 REQUIRED_FILES, skip existing, RLCD_OFFLINE -> bail with 'unset it or pass --model').",
           "deleted": false,
           "createdAt": "2026-09-22T01:00:10.416Z"
         }
@@ -588,7 +588,7 @@
       "status": "done",
       "createdAt": "2026-09-21T23:34:37.270Z",
       "updatedAt": "2026-09-22T01:09:03.051Z",
-      "description": "Download a variant's 5 required checkpoint files from Hugging Face into $XDG_CACHE_HOME/laya-rs/<repo> (default ~/.cache/laya-rs), skipping files already present, fetching via a .part sibling with Content-Length verification and atomic rename, and refusing to touch the network when LAYA_OFFLINE is set.",
+      "description": "Download a variant's 5 required checkpoint files from Hugging Face into $XDG_CACHE_HOME/rlcd-rs/<repo> (default ~/.cache/rlcd-rs), skipping files already present, fetching via a .part sibling with Content-Length verification and atomic rename, and refusing to touch the network when RLCD_OFFLINE is set.",
       "epic": "checkpoint-management",
       "children": [],
       "stateHistory": [
@@ -616,12 +616,12 @@
       "userStory": {
         "role": "CLI caller on a fresh machine",
         "action": "have a variant's checkpoint downloaded into the local cache",
-        "benefit": "`laya ask`/`answer` work with zero manual setup on a fresh machine"
+        "benefit": "`rlcd ask`/`answer` work with zero manual setup on a fresh machine"
       },
       "rules": [
         {
           "id": 0,
-          "text": "The five required files (rl_agent_config.json, encoder/config.json, tokenizer/tokenizer.json, tokenizer/tokenizer_config.json, model.safetensors) are downloaded into $XDG_CACHE_HOME/laya-rs/<repo-basename> (default ~/.cache/laya-rs), one per Hugging Face URL",
+          "text": "The five required files (rl_agent_config.json, encoder/config.json, tokenizer/tokenizer.json, tokenizer/tokenizer_config.json, model.safetensors) are downloaded into $XDG_CACHE_HOME/rlcd-rs/<repo-basename> (default ~/.cache/rlcd-rs), one per Hugging Face URL",
           "deleted": false,
           "createdAt": "2026-09-22T01:04:59.417Z"
         },
@@ -642,7 +642,7 @@
       "examples": [
         {
           "id": 0,
-          "text": "On a fresh cache, requesting the typed-decisions variant fetches all five files from huggingface.co into ~/.cache/laya-rs/laya-typed-decisions and returns that directory",
+          "text": "On a fresh cache, requesting the typed-decisions variant fetches all five files from huggingface.co into ~/.cache/rlcd-rs/laya-typed-decisions and returns that directory",
           "deleted": false,
           "createdAt": "2026-09-22T01:05:11.529Z"
         },
@@ -657,7 +657,7 @@
       "architectureNotes": [
         {
           "id": 0,
-          "text": "src/download.rs (native-only; ureq 2 sync HTTP — the browser demo uses the JS fetch API instead): REQUIRED_FILES (18); cache_dir() XDG_CACHE_HOME or ~/.cache + laya-rs (22); variant_cache_dir = cache/<hf_repo basename> (37); download_variant (86) loops REQUIRED_FILES — skip if dest.is_file(), LAYA_OFFLINE+missing -> bail, else fetch_to_file; fetch_to_file (40): GET huggingface.co/<repo>/resolve/main/<file> to a .part sibling, 64KiB reads, Content-Length check (short read -> remove .part + bail 'short read for {url}: got {written} bytes, expected {len}'), atomic rename, stderr progress '<name> ... done (N bytes)'.",
+          "text": "src/download.rs (native-only; ureq 2 sync HTTP — the browser demo uses the JS fetch API instead): REQUIRED_FILES (18); cache_dir() XDG_CACHE_HOME or ~/.cache + rlcd-rs (22); variant_cache_dir = cache/<hf_repo basename> (37); download_variant (86) loops REQUIRED_FILES — skip if dest.is_file(), RLCD_OFFLINE+missing -> bail, else fetch_to_file; fetch_to_file (40): GET huggingface.co/<repo>/resolve/main/<file> to a .part sibling, 64KiB reads, Content-Length check (short read -> remove .part + bail 'short read for {url}: got {written} bytes, expected {len}'), atomic rename, stderr progress '<name> ... done (N bytes)'.",
           "deleted": false,
           "createdAt": "2026-09-22T01:05:28.274Z"
         }
@@ -873,7 +873,7 @@
       "status": "done",
       "createdAt": "2026-09-21T23:34:56.435Z",
       "updatedAt": "2026-09-22T07:22:31.335Z",
-      "description": "WasmAgent::load(weights, tokenizer, tokenizer_config_json, encoder_config_json, rl_agent_config_json) loads a checkpoint from in-memory bytes on CPU/F32, and WasmAgent::ask(state_json, questions_json) answers a batch, returning JSON in the same {qid: {type, ...}} shape `laya answer` writes; errors surface the full anyhow context chain to the browser console.",
+      "description": "WasmAgent::load(weights, tokenizer, tokenizer_config_json, encoder_config_json, rl_agent_config_json) loads a checkpoint from in-memory bytes on CPU/F32, and WasmAgent::ask(state_json, questions_json) answers a batch, returning JSON in the same {qid: {type, ...}} shape `rlcd answer` writes; errors surface the full anyhow context chain to the browser console.",
       "epic": "decision-inference",
       "children": [],
       "stateHistory": [
@@ -917,7 +917,7 @@
       "nextRuleId": 4,
       "userStory": {
         "role": "Browser/JS developer",
-        "action": "run laya in the browser via WasmAgent (load checkpoint from bytes, ask a batch of typed questions)",
+        "action": "run rlcd in the browser via WasmAgent (load checkpoint from bytes, ask a batch of typed questions)",
         "benefit": "I get the same typed decisions in the browser demo without a Python backend"
       },
       "examples": [
@@ -932,7 +932,7 @@
       "architectureNotes": [
         {
           "id": 0,
-          "text": "src/wasm.rs (wasm32-only module, lib.rs line 17-18): WasmAgent { inner: RLAgent }; load(weights, tokenizer, tokenizer_config_json, encoder_config_json, rl_agent_config_json) -> Result<WasmAgent, JsValue> (CPU/F32 via RLAgent::load_from_bytes + safetensors32::load_buffer); ask(state_json, questions_json) -> Result<String, JsValue> (parses state as arbitrary JSON, questions as BTreeMap<String, RawQuestion>, empty -> Err \"no questions given\", system_one, answer_to_json per qid, serializes {qid: {...}}). Errors: anyhow_to_js_err uses format!(\"{e:#}\") for the full context chain; to_js_err for plain. #[wasm_bindgen(start)] init_panic_hook (console_error_panic_hook). Callers: website/src/lib/laya.ts JS fetches the five files from HF and calls load/ask; lib is crate-type [rlib, cdylib]. Tokenizers use `unstable_wasm` (pure-Rust fancy-regex backend) for ALL targets — onig is C-linked and cannot build for wasm32 (Cargo.toml comment, verified by wasm check).",
+          "text": "src/wasm.rs (wasm32-only module, lib.rs line 17-18): WasmAgent { inner: RLAgent }; load(weights, tokenizer, tokenizer_config_json, encoder_config_json, rl_agent_config_json) -> Result<WasmAgent, JsValue> (CPU/F32 via RLAgent::load_from_bytes + safetensors32::load_buffer); ask(state_json, questions_json) -> Result<String, JsValue> (parses state as arbitrary JSON, questions as BTreeMap<String, RawQuestion>, empty -> Err \"no questions given\", system_one, answer_to_json per qid, serializes {qid: {...}}). Errors: anyhow_to_js_err uses format!(\"{e:#}\") for the full context chain; to_js_err for plain. #[wasm_bindgen(start)] init_panic_hook (console_error_panic_hook). Callers: browser JS fetches the five files from HF and calls load/ask; lib is crate-type [rlib, cdylib]. Tokenizers use `unstable_wasm` (pure-Rust fancy-regex backend) for ALL targets — onig is C-linked and cannot build for wasm32 (Cargo.toml comment, verified by wasm check).",
           "deleted": false,
           "createdAt": "2026-09-22T01:23:55.323Z"
         }
@@ -1198,7 +1198,7 @@
       "status": "done",
       "createdAt": "2026-09-21T23:35:15.804Z",
       "updatedAt": "2026-09-22T08:56:31.808Z",
-      "description": "scripts/jev_batch.py questions.json answers.json --model-dir DIR [--only QID] [--binary PATH]: the multi-section batch driver — reads a jev-questions-style {section: {state, questions}} file, calls `laya answer` once per section into a temp dir, and assembles {section: {qid: answer}} JSON to the output.",
+      "description": "scripts/jev_batch.py questions.json answers.json --model-dir DIR [--only QID] [--binary PATH]: the multi-section batch driver — reads a jev-questions-style {section: {state, questions}} file, calls `rlcd answer` once per section into a temp dir, and assembles {section: {qid: answer}} JSON to the output.",
       "epic": "decision-inference",
       "children": [],
       "stateHistory": [
@@ -1225,13 +1225,13 @@
       ],
       "userStory": {
         "role": "user running a jev-questions battery across multiple sections",
-        "action": "batch-answer every section through the laya CLI driver script",
+        "action": "batch-answer every section through the rlcd CLI driver script",
         "benefit": "get a {section: {qid: answer}} file without writing glue code"
       },
       "rules": [
         {
           "id": 0,
-          "text": "The driver calls the laya binary once per section, in input-file order, passing the section's state and questions as {state, questions} JSON plus the user's checkpoint flags; each section's stdout is suppressed and its stderr passes through",
+          "text": "The driver calls the rlcd binary once per section, in input-file order, passing the section's state and questions as {state, questions} JSON plus the user's checkpoint flags; each section's stdout is suppressed and its stderr passes through",
           "deleted": false,
           "createdAt": "2026-09-22T08:42:28.895Z"
         },
@@ -1243,25 +1243,25 @@
         },
         {
           "id": 2,
-          "text": "Each section body must contain both a `state` and a `questions` key; a section missing either is a hard error naming the section, aborting the run before its `laya answer` call",
+          "text": "Each section body must contain both a `state` and a `questions` key; a section missing either is a hard error naming the section, aborting the run before its `rlcd answer` call",
           "deleted": false,
           "createdAt": "2026-09-22T08:42:29.367Z"
         },
         {
           "id": 3,
-          "text": "`--only QID` is applied per section: questions whose id does not match are dropped before the `laya answer` call, and a section left with zero questions after filtering is skipped entirely — it gets no `laya answer` call and no entry in the output",
+          "text": "`--only QID` is applied per section: questions whose id does not match are dropped before the `rlcd answer` call, and a section left with zero questions after filtering is skipped entirely — it gets no `rlcd answer` call and no entry in the output",
           "deleted": false,
           "createdAt": "2026-09-22T08:42:33.455Z"
         },
         {
           "id": 4,
-          "text": "A section's `laya answer` invocation exiting non-zero (bad question shape, missing state inside, no questions after filtering, checkpoint load failure, ...) aborts the whole run via subprocess check; no output file is written",
+          "text": "A section's `rlcd answer` invocation exiting non-zero (bad question shape, missing state inside, no questions after filtering, checkpoint load failure, ...) aborts the whole run via subprocess check; no output file is written",
           "deleted": false,
           "createdAt": "2026-09-22T08:42:33.656Z"
         },
         {
           "id": 5,
-          "text": "The laya binary is located in order: an explicit --binary flag, else target/release/laya in the repository root (two directories up from scripts/), else target/debug/laya, else `laya` from PATH; the default --model-dir points at /mnt/extra/ai/laya/typed-decisions",
+          "text": "The rlcd binary is located in order: an explicit --binary flag, else target/release/rlcd in the repository root (two directories up from scripts/), else target/debug/rlcd, else `rlcd` from PATH; the default --model-dir points at /mnt/extra/ai/laya/typed-decisions",
           "deleted": false,
           "createdAt": "2026-09-22T08:42:48.240Z"
         },
@@ -1273,7 +1273,7 @@
         },
         {
           "id": 7,
-          "text": "The output file is written exactly once, after all sections succeed, as a JSON object mapping each section to a {qid: that section's laya answer result for that qid} object, pretty-printed with keys sorted at every level",
+          "text": "The output file is written exactly once, after all sections succeed, as a JSON object mapping each section to a {qid: that section's rlcd answer result for that qid} object, pretty-printed with keys sorted at every level",
           "deleted": false,
           "createdAt": "2026-09-22T08:42:48.675Z"
         }
@@ -1288,7 +1288,7 @@
         },
         {
           "id": 1,
-          "text": "Running the driver on a file whose top-level value is a JSON array (or any non-object) exits with `expected top-level object of {section: {state, questions}}` and runs no `laya answer` call",
+          "text": "Running the driver on a file whose top-level value is a JSON array (or any non-object) exits with `expected top-level object of {section: {state, questions}}` and runs no `rlcd answer` call",
           "deleted": false,
           "createdAt": "2026-09-22T08:42:52.664Z"
         },
@@ -1300,25 +1300,25 @@
         },
         {
           "id": 3,
-          "text": "With `--only churn_risk` against a file where only section s2 has that question id, s1 is skipped entirely (no `laya answer` call, no `wrote` line for it) and answers.json contains only the s2 entry",
+          "text": "With `--only churn_risk` against a file where only section s2 has that question id, s1 is skipped entirely (no `rlcd answer` call, no `wrote` line for it) and answers.json contains only the s2 entry",
           "deleted": false,
           "createdAt": "2026-09-22T08:42:55.930Z"
         },
         {
           "id": 4,
-          "text": "Pointing `--binary` at a non-writable or missing checkpoint makes the section's `laya answer` exit non-zero; the driver aborts (subprocess check) and writes no answers.json",
+          "text": "Pointing `--binary` at a non-writable or missing checkpoint makes the section's `rlcd answer` exit non-zero; the driver aborts (subprocess check) and writes no answers.json",
           "deleted": false,
           "createdAt": "2026-09-22T08:42:56.112Z"
         },
         {
           "id": 5,
-          "text": "In a fresh clone the driver auto-detects target/debug/laya (or target/release/laya if present) without --binary; when neither build exists it falls back to `laya` on PATH",
+          "text": "In a fresh clone the driver auto-detects target/debug/rlcd (or target/release/rlcd if present) without --binary; when neither build exists it falls back to `rlcd` on PATH",
           "deleted": false,
           "createdAt": "2026-09-22T08:42:56.340Z"
         },
         {
           "id": 6,
-          "text": "CONTRACT MISMATCH (as-built): the driver passes `--model-dir DIR` to `laya answer`, but the current `Answer` subcommand (src/main.rs:66-77) accepts `--model` (env LAYA_MODEL), `--model-variant` and `--models-root` — never `--model-dir`. Running today's script against today's binary fails with `error: unexpected argument '--model-dir' found` for the first section, so no answers.json is written. README.md:159-166 and website/src/components/docs/Cli.tsx also still document `--model-dir` for `laya ask`/`laya answer`",
+          "text": "CONTRACT MISMATCH (as-built): the driver passes `--model-dir DIR` to `rlcd answer`, but the current `Answer` subcommand (src/main.rs:66-77) accepts `--model` (env LAYA_MODEL), `--model-variant` and `--models-root` — never `--model-dir`. Running today's script against today's binary fails with `error: unexpected argument '--model-dir' found` for the first section, so no answers.json is written. README.md:159-166 also still document `--model-dir` for `rlcd ask`/`rlcd answer`",
           "deleted": false,
           "createdAt": "2026-09-22T08:43:29.072Z"
         }
@@ -1343,7 +1343,7 @@
         },
         {
           "id": 2,
-          "text": "Tests invoke the real scripts/jev_batch.py via python3 subprocess with a stand-in `laya` shell-script binary (records argv, writes the section output file) so per-section behavior is observable without the real checkpoint; end-to-end scenarios with the real binary + LAYA_TEST_MODEL stay gated and skipped, matching the tests/cli_answer.rs convention",
+          "text": "Tests invoke the real scripts/jev_batch.py via python3 subprocess with a stand-in `rlcd` shell-script binary (records argv, writes the section output file) so per-section behavior is observable without the real checkpoint; end-to-end scenarios with the real binary + LAYA_TEST_MODEL stay gated and skipped, matching the tests/cli_answer.rs convention",
           "deleted": false,
           "createdAt": "2026-09-22T08:46:19.141Z"
         }
@@ -1360,7 +1360,7 @@
       "status": "done",
       "createdAt": "2026-09-22T09:59:10.752Z",
       "updatedAt": "2026-09-23T12:09:16.501Z",
-      "description": "Parent story for the JEV epic: laya-rs serves a convaiinnovations/laya checkpoint behind the open Jev/Simple-Jev classifier contract (POST /v1/classifier, alias /v1/systemone, GET /health). A new `laya serve` subcommand runs an axum/tokio/tower-http server exposing the laya RLAgent through strict v1 request validation, laya-native answer mapping, single-flight model execution with a 429 admission queue, and protocol error envelopes. This card holds the overarching architecture, the example-mapping rules, and the attached protocol documentation (architecture.md + protocol-reference.md, incl. JSON Schemas); the implementation is decomposed into child stories JEV-003..JEV-007 (request schema → mapping/execution → endpoints → CLI → conformance gate).",
+      "description": "Parent story for the JEV epic: rlcd-rs serves a convaiinnovations/laya checkpoint behind the open Jev/Simple-Jev classifier contract (POST /v1/classifier, alias /v1/systemone, GET /health). A new `rlcd serve` subcommand runs an axum/tokio/tower-http server exposing the rlcd RLAgent through strict v1 request validation, laya-native answer mapping, single-flight model execution with a 429 admission queue, and protocol error envelopes. This card holds the overarching architecture, the example-mapping rules, and the attached protocol documentation (architecture.md + protocol-reference.md, incl. JSON Schemas); the implementation is decomposed into child stories JEV-003..JEV-007 (request schema → mapping/execution → endpoints → CLI → conformance gate).",
       "epic": "jev-server",
       "children": [
         "JEV-003",
@@ -1371,7 +1371,7 @@
       ],
       "userStory": {
         "role": "developer or ops engineer self-hosting typed decision serving",
-        "action": "run a Rust HTTP server speaking the open Jev/Simple-Jev classifier protocol, backed by laya-rs native inference instead of the Python/PyTorch simple-jev Laya backend",
+        "action": "run a Rust HTTP server speaking the open Jev/Simple-Jev classifier protocol, backed by rlcd-rs native inference instead of the Python/PyTorch simple-jev Laya backend",
         "benefit": "any Jev-protocol client can use my self-hosted, sub-35ms laya checkpoint without a Python runtime"
       },
       "stateHistory": [
@@ -1426,7 +1426,7 @@
       "examples": [
         {
           "id": 0,
-          "text": "A simple-jev Python client pointed at the laya-rs server (base URL swapped) completes its quickstart: GET /v1/models-style discovery via /health, then POST /v1/classifier with the red-bicycle example returns a choice answer with probabilities and a zero output-token usage block",
+          "text": "A simple-jev Python client pointed at the rlcd-rs server (base URL swapped) completes its quickstart: GET /v1/models-style discovery via /health, then POST /v1/classifier with the red-bicycle example returns a choice answer with probabilities and a zero output-token usage block",
           "deleted": false,
           "createdAt": "2026-09-22T10:05:36.189Z"
         }
@@ -1549,7 +1549,7 @@
       "architectureNotes": [
         {
           "id": 0,
-          "text": "New src/server/request.rs (native-only; the whole src/server tree is cfg(not(target_arch=\"wasm32\")) like model_path/router). parse_classifier_request(bytes) -> Result<ClassifierRequest, Vec<RequestError>>: pure, no model/IO. Reuses laya::Question (schema.rs) — the strictness deltas live here (unknown-field rejection via serde deny_unknown_fields on per-type structs, cardinality 2-50, noul true/false-only, context XOR as a post-parse cross-field check, canonical() for non-string entries). Non-string canonical JSON: serde_json with BTreeMap keys (sorted) + to_string (compact) + no escaping beyond JSON basics (ensure_ascii parity via manual escaping of <0x20 only).",
+          "text": "New src/server/request.rs (native-only; the whole src/server tree is cfg(not(target_arch=\"wasm32\")) like model_path/router). parse_classifier_request(bytes) -> Result<ClassifierRequest, Vec<RequestError>>: pure, no model/IO. Reuses rlcd::Question (schema.rs) — the strictness deltas live here (unknown-field rejection via serde deny_unknown_fields on per-type structs, cardinality 2-50, noul true/false-only, context XOR as a post-parse cross-field check, canonical() for non-string entries). Non-string canonical JSON: serde_json with BTreeMap keys (sorted) + to_string (compact) + no escaping beyond JSON basics (ensure_ascii parity via manual escaping of <0x20 only).",
           "deleted": false,
           "createdAt": "2026-09-22T10:41:05.797Z"
         }
@@ -1797,7 +1797,7 @@
     },
     "JEV-006": {
       "id": "JEV-006",
-      "title": "`laya serve` CLI subcommand: checkpoint load, server lifecycle, graceful shutdown",
+      "title": "`rlcd serve` CLI subcommand: checkpoint load, server lifecycle, graceful shutdown",
       "type": "story",
       "status": "done",
       "createdAt": "2026-09-22T10:02:24.955Z",
@@ -1811,7 +1811,7 @@
       ],
       "userStory": {
         "role": "ops engineer",
-        "action": "launch the server with one laya serve command and checkpoint flags matching the existing subcommands",
+        "action": "launch the server with one rlcd serve command and checkpoint flags matching the existing subcommands",
         "benefit": "deployment is a single static binary with a predictable lifecycle (load, serve, graceful stop)"
       },
       "stateHistory": [
@@ -1839,7 +1839,7 @@
       "rules": [
         {
           "id": 0,
-          "text": "laya serve accepts --model DIR | --model-variant KEY [--models-root DIR] (identical precedence to ask/answer via model_path::resolve) and --host (default 127.0.0.1) / --port (default 8000) / --max-model-len (default: checkpoint max_len) / --max-request-branches (100) / --max-queued (16); --max-model-len is clamped to the checkpoint's native max_len",
+          "text": "rlcd serve accepts --model DIR | --model-variant KEY [--models-root DIR] (identical precedence to ask/answer via model_path::resolve) and --host (default 127.0.0.1) / --port (default 8000) / --max-model-len (default: checkpoint max_len) / --max-request-branches (100) / --max-queued (16); --max-model-len is clamped to the checkpoint's native max_len",
           "deleted": false,
           "createdAt": "2026-09-22T10:03:50.238Z"
         },
@@ -1860,13 +1860,13 @@
       "examples": [
         {
           "id": 0,
-          "text": "Running `laya serve --port 8000` while another process owns port 8000 fails with a readable bind error before serving anything; running with --max-model-len 4096 against a checkpoint whose native max_len is 1024 silently clamps the effective cap to 1024",
+          "text": "Running `rlcd serve --port 8000` while another process owns port 8000 fails with a readable bind error before serving anything; running with --max-model-len 4096 against a checkpoint whose native max_len is 1024 silently clamps the effective cap to 1024",
           "deleted": false,
           "createdAt": "2026-09-22T10:04:40.694Z"
         },
         {
           "id": 1,
-          "text": "Running `laya serve --model /path/to/laya-typed-decisions --port 8000` loads the checkpoint, prints `laya serving '/path/to/laya-typed-decisions' on http://127.0.0.1:8000`, serves the endpoints, and on Ctrl-C completes any in-flight forward before exiting 0",
+          "text": "Running `rlcd serve --model /path/to/laya-typed-decisions --port 8000` loads the checkpoint, prints `rlcd serving '/path/to/laya-typed-decisions' on http://127.0.0.1:8000`, serves the endpoints, and on Ctrl-C completes any in-flight forward before exiting 0",
           "deleted": false,
           "createdAt": "2026-09-22T10:04:40.894Z"
         },
@@ -1878,7 +1878,7 @@
         },
         {
           "id": 3,
-          "text": "`laya serve --max-queued 0` and `laya serve --max-request-branches -1` each exit non-zero immediately with a clap usage error naming the flag ('invalid value' / '--max-queued must be > 0' style) and NO checkpoint-load progress output — nothing is loaded and no HTTP is ever served",
+          "text": "`rlcd serve --max-queued 0` and `rlcd serve --max-request-branches -1` each exit non-zero immediately with a clap usage error naming the flag ('invalid value' / '--max-queued must be > 0' style) and NO checkpoint-load progress output — nothing is loaded and no HTTP is ever served",
           "deleted": false,
           "createdAt": "2026-09-23T01:24:46.472Z"
         }
@@ -1894,7 +1894,7 @@
       "architectureNotes": [
         {
           "id": 0,
-          "text": "start_server(host, model_name, agent: Arc<RLAgent>, config: ServerConfig) -> ServerHandle in src/server/server.rs (per the JEV-002 architecture's start_server/ServerHandle pattern): build ServerState from RealAnswerer(Arc<RLAgent>) + model_name + config, build_router(state), TcpListener::bind(host:port) (0 = ephemeral), oneshot channel, tokio::spawn(axum::serve(listener, app).with_graceful_shutdown(rx.await)), return ServerHandle { port (actual), model_name, shutdown: oneshot::Sender, task: JoinHandle } with async stop() (send + await task). Bind failure -> anyhow error before any HTTP. The 'laya serving <model> on http://host:port' banner is printed by the CLI (main.rs), not start_server.",
+          "text": "start_server(host, model_name, agent: Arc<RLAgent>, config: ServerConfig) -> ServerHandle in src/server/server.rs (per the JEV-002 architecture's start_server/ServerHandle pattern): build ServerState from RealAnswerer(Arc<RLAgent>) + model_name + config, build_router(state), TcpListener::bind(host:port) (0 = ephemeral), oneshot channel, tokio::spawn(axum::serve(listener, app).with_graceful_shutdown(rx.await)), return ServerHandle { port (actual), model_name, shutdown: oneshot::Sender, task: JoinHandle } with async stop() (send + await task). Bind failure -> anyhow error before any HTTP. The 'rlcd serving <model> on http://host:port' banner is printed by the CLI (main.rs), not start_server.",
           "deleted": false,
           "createdAt": "2026-09-22T23:18:26.123Z"
         },
@@ -1906,7 +1906,7 @@
         },
         {
           "id": 2,
-          "text": "Tests (tests/serve_cli.rs): weight-free, via the real `laya` binary (env CARGO_BIN_EXE_laya) like tests/cli_ask.rs: (a) parse-time rejections — `laya serve --max-queued 0` and `--max-request-branches -1` exit non-zero with a clap usage error before any checkpoint load (assert stderr mentions invalid value, no load progress); (b) port conflict — bind a real TcpListener to an ephemeral port, run `laya serve --port <that> --model <nonexistent-dir>`... no: load happens first, so use a real checkpoint path? Weight-free trick: the CLI loads the checkpoint BEFORE binding, so a missing checkpoint dir exits non-zero with a readable load error before any bind (this covers 'load failures fail cleanly'); the bind conflict needs a loaded model — model-gated (LAYA_TEST_MODEL) alongside the full lifecycle (start, /health round-trip, ctrl-C/stop). (c) clamp is asserted at the config seam: ServerState::effective_cap(mock(1024), ServerConfig{max_model_len: Some(4096)}) == 1024 (JEV-005 code path, JEV-006 flag wiring proven by (a)).",
+          "text": "Tests (tests/serve_cli.rs): weight-free, via the real `rlcd` binary (env CARGO_BIN_EXE_rlcd) like tests/cli_ask.rs: (a) parse-time rejections — `rlcd serve --max-queued 0` and `--max-request-branches -1` exit non-zero with a clap usage error before any checkpoint load (assert stderr mentions invalid value, no load progress); (b) port conflict — bind a real TcpListener to an ephemeral port, run `rlcd serve --port <that> --model <nonexistent-dir>`... no: load happens first, so use a real checkpoint path? Weight-free trick: the CLI loads the checkpoint BEFORE binding, so a missing checkpoint dir exits non-zero with a readable load error before any bind (this covers 'load failures fail cleanly'); the bind conflict needs a loaded model — model-gated (LAYA_TEST_MODEL) alongside the full lifecycle (start, /health round-trip, ctrl-C/stop). (c) clamp is asserted at the config seam: ServerState::effective_cap(mock(1024), ServerConfig{max_model_len: Some(4096)}) == 1024 (JEV-005 code path, JEV-006 flag wiring proven by (a)).",
           "deleted": false,
           "createdAt": "2026-09-22T23:22:05.757Z"
         }
@@ -1920,7 +1920,7 @@
       "status": "done",
       "createdAt": "2026-09-22T10:02:29.134Z",
       "updatedAt": "2026-09-23T11:42:05.999Z",
-      "description": "tests/jev_conformance.rs (+ JSON fixtures): HTTP-level conformance suite pinning laya-rs to the Jev/Simple-Jev protocol — weight-free axum oneshot tests against a mock Answerer (validation matrix, alias, health, openapi, 429 queue, 500 recovery) and LAYA_TEST_MODEL-gated real round-trips mirroring simple-jev's test_laya.py contract tests (mixed choice/score/noul, wrong model, overflow, chat history, media rejection, raw_logits rejection, numerical sanity + determinism). Epic quality gate. Card doc: docs/jev-server/JEV-007-conformance.md",
+      "description": "tests/jev_conformance.rs (+ JSON fixtures): HTTP-level conformance suite pinning rlcd-rs to the Jev/Simple-Jev protocol — weight-free axum oneshot tests against a mock Answerer (validation matrix, alias, health, openapi, 429 queue, 500 recovery) and LAYA_TEST_MODEL-gated real round-trips mirroring simple-jev's test_laya.py contract tests (mixed choice/score/noul, wrong model, overflow, chat history, media rejection, raw_logits rejection, numerical sanity + determinism). Epic quality gate. Card doc: docs/jev-server/JEV-007-conformance.md",
       "epic": "jev-server",
       "children": [],
       "parent": "JEV-002",
@@ -1929,7 +1929,7 @@
       ],
       "userStory": {
         "role": "server implementer",
-        "action": "prove with an automated suite that laya-rs stays protocol-compliant as it evolves",
+        "action": "prove with an automated suite that rlcd-rs stays protocol-compliant as it evolves",
         "benefit": "regressions in validation, mapping, or queueing are caught before release, mirroring the reference implementation's own tests"
       },
       "stateHistory": [
@@ -2005,7 +2005,7 @@
         },
         {
           "id": 1,
-          "text": "Conformance finding (model-gated tier, real checkpoint): the protocol requires choice/score `confidence` = the largest candidate/criterion probability (protocol-reference.md \"Answer field rules\"; reference test_laya.py asserts confidence == max probability), but the JEV-005 mapping passed through laya::Answer's internal entropy-based confidence (metrics::confidence_from_probs, `1 - H/ln k`). Real-checkpoint run emitted confidence 0.303 vs max probability 0.812. Fix (implementation of this card's quality gate): answer_to_jev_json now DERIVES confidence from the probabilities (winning candidate for choice, max for score) instead of passing the Answer field through; the CLI's native answer_to_json (entropy metric) is untouched. All 19 test binaries + the LAYA_TEST_MODEL-gated conformance scenarios pass after the fix; no new clippy warnings introduced (the 3 push_str(':') in response.rs and the `/** header doc-comment warnings are pre-existing/established convention).",
+          "text": "Conformance finding (model-gated tier, real checkpoint): the protocol requires choice/score `confidence` = the largest candidate/criterion probability (protocol-reference.md \"Answer field rules\"; reference test_laya.py asserts confidence == max probability), but the JEV-005 mapping passed through rlcd::Answer's internal entropy-based confidence (metrics::confidence_from_probs, `1 - H/ln k`). Real-checkpoint run emitted confidence 0.303 vs max probability 0.812. Fix (implementation of this card's quality gate): answer_to_jev_json now DERIVES confidence from the probabilities (winning candidate for choice, max for score) instead of passing the Answer field through; the CLI's native answer_to_json (entropy metric) is untouched. All 19 test binaries + the LAYA_TEST_MODEL-gated conformance scenarios pass after the fix; no new clippy warnings introduced (the 3 push_str(':') in response.rs and the `/** header doc-comment warnings are pre-existing/established convention).",
           "deleted": false,
           "createdAt": "2026-09-23T11:31:24.301Z"
         }

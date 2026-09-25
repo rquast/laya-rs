@@ -6,10 +6,10 @@ use anyhow::Context;
 use clap::{Parser, Subcommand};
 use serde_json::{json, Value};
 
-use laya::agent::answer_to_json;
-use laya::batching::raw_question_to_question;
-use laya::server::{start_server, Answerer, RealAnswerer, ServerConfig};
-use laya::{model_path, route, Checkpoint, QType, Question, RLAgent, RlcdConfig, Trainer};
+use rlcd::agent::answer_to_json;
+use rlcd::batching::raw_question_to_question;
+use rlcd::server::{start_server, Answerer, RealAnswerer, ServerConfig};
+use rlcd::{model_path, route, Checkpoint, QType, Question, RLAgent, RlcdConfig, Trainer};
 
 /// The `model_path::VariantDef` key routed to for a checkpoint (see `router::Checkpoint`).
 fn variant_key(checkpoint: Checkpoint) -> &'static str {
@@ -21,11 +21,11 @@ fn variant_key(checkpoint: Checkpoint) -> &'static str {
 
 /// Rust reimplementation of Laya's typed-decision inference + RLCD training.
 // clap derives the app name from `CARGO_PKG_NAME` by default, which is the
-// crate/package name `laya-rs` — pinned explicitly so `laya --version` keeps
+// crate/package name `rlcd-rs` — pinned explicitly so `rlcd --version` keeps
 // reporting the binary name, not the package name. `version` isn't added
 // automatically without clap's `cargo` feature, so it's spelled out too.
 #[derive(Parser)]
-#[command(name = "laya", version)]
+#[command(name = "rlcd", version)]
 struct Args {
     #[command(subcommand)]
     command: Option<Command>,
@@ -35,7 +35,7 @@ struct Args {
     /// `multilingual/` subfolder, each a full checkpoint) — checked for the routed
     /// checkpoint before falling back to a standalone per-variant download. Optional; with
     /// neither this nor `--model`/`LAYA_MODEL` set, checkpoints are downloaded into
-    /// `~/.cache/laya-rs` on first use (see `laya::model_path`).
+    /// `~/.cache/rlcd-rs` on first use (see `rlcd::model_path`).
     #[arg(long, env = "LAYA_MODELS_ROOT", global = true)]
     models_root: Option<PathBuf>,
 
@@ -111,14 +111,14 @@ enum Command {
         port: u16,
         /// Effective per-question sequence cap; the checkpoint's native
         /// `max_len` when omitted, clamped to it when larger.
-        #[arg(long, env = "LAYA_MAX_MODEL_LEN", value_parser = positive_usize, allow_hyphen_values = true)]
+        #[arg(long, env = "RLCD_MAX_MODEL_LEN", value_parser = positive_usize, allow_hyphen_values = true)]
         max_model_len: Option<usize>,
         /// Max questions per request (the reference's 100).
-        #[arg(long, env = "LAYA_MAX_REQUEST_BRANCHES", default_value_t = 100, value_parser = positive_usize, allow_hyphen_values = true)]
+        #[arg(long, env = "RLCD_MAX_REQUEST_BRANCHES", default_value_t = 100, value_parser = positive_usize, allow_hyphen_values = true)]
         max_request_branches: usize,
         /// Admission queue: waiting slots on top of the one in-flight forward
         /// (the reference's 16).
-        #[arg(long, env = "LAYA_MAX_QUEUED", default_value_t = 16, value_parser = positive_usize, allow_hyphen_values = true)]
+        #[arg(long, env = "RLCD_MAX_QUEUED", default_value_t = 16, value_parser = positive_usize, allow_hyphen_values = true)]
         max_queued: usize,
     },
 }
@@ -184,7 +184,7 @@ fn main() -> anyhow::Result<()> {
         };
         let answers = agent.system_one(&json!(state), &[("answer".to_string(), q)])?;
         for (_, answer) in answers {
-            if let laya::Answer::Choice { choice, probabilities, confidence, act_probability } = answer {
+            if let rlcd::Answer::Choice { choice, probabilities, confidence, act_probability } = answer {
                 println!("choice={choice} confidence={confidence:.4} act_p={act_probability:.4}");
                 for (k, v) in probabilities {
                     println!("    {k}: {v:.4}");
@@ -227,9 +227,9 @@ fn main() -> anyhow::Result<()> {
     }
 
     if let Some(Command::Train { model_dir, dataset, epochs, lr, group_size, sigma, save_to }) = args.command {
-        let rlcd = RlcdConfig { lr, group_size, noise_sigma: sigma, ..Default::default() };
-        let mut trainer = Trainer::load(&model_dir, &rlcd)?;
-        trainer.train_jsonl(&dataset, epochs, &rlcd)?;
+        let cfg = RlcdConfig { lr, group_size, noise_sigma: sigma, ..Default::default() };
+        let mut trainer = Trainer::load(&model_dir, &cfg)?;
+        trainer.train_jsonl(&dataset, epochs, &cfg)?;
         let out = save_to.unwrap_or_else(|| format!("{model_dir}/model.trained.safetensors"));
         trainer.save(&out)?;
         println!("saved trained weights to {out}");
@@ -290,19 +290,19 @@ fn main() -> anyhow::Result<()> {
     let answers = agent.system_one(&state, &questions)?;
     for (qid, answer) in answers {
         match answer {
-            laya::Answer::Choice { choice, probabilities, confidence, act_probability } => {
+            rlcd::Answer::Choice { choice, probabilities, confidence, act_probability } => {
                 println!("{qid}: choice={choice} confidence={confidence:.4} act_p={act_probability:.4}");
                 for (k, v) in probabilities {
                     println!("    {k}: {v:.4}");
                 }
             }
-            laya::Answer::Score { score, legend, probabilities, confidence, act_probability } => {
+            rlcd::Answer::Score { score, legend, probabilities, confidence, act_probability } => {
                 println!("{qid}: score={score:.4} confidence={confidence:.4} act_p={act_probability:.4}");
                 for (level, p) in legend.iter().zip(probabilities.iter()) {
                     println!("    {level}: {p:.4}");
                 }
             }
-            laya::Answer::Noul { noul, act_probability } => {
+            rlcd::Answer::Noul { noul, act_probability } => {
                 println!("{qid}: noul={noul:.4} act_p={act_probability:.4}");
             }
         }
@@ -332,9 +332,9 @@ async fn serve(models_root: Option<PathBuf>, command: Command) -> anyhow::Result
     let answerer: Arc<dyn Answerer> = Arc::new(RealAnswerer::new(Arc::new(agent)));
     let config = ServerConfig { max_model_len, max_request_branches, max_queued };
     let handle = start_server(&host, port, answerer, model_name, config).await?;
-    eprintln!("laya serving '{}' on http://{}:{} (/v1/classifier, /v1/systemone, /health, /openapi.json)", handle.model_name, host, handle.port);
+    eprintln!("rlcd serving '{}' on http://{}:{} (/v1/classifier, /v1/systemone, /health, /openapi.json)", handle.model_name, host, handle.port);
     wait_for_shutdown_signal().await;
     handle.stop().await;
-    eprintln!("laya stopped");
+    eprintln!("rlcd stopped");
     Ok(())
 }

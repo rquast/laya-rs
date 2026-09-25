@@ -1,4 +1,4 @@
-# AST Research: CLI RLCD training (`laya train`)
+# AST Research: CLI RLCD training (`rlcd train`)
 
 ## Public API surface (src/train.rs)
 

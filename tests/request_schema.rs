@@ -11,8 +11,8 @@
  * `RequestError` into the protocol envelope with code 422).
  */
 
-use laya::server::request::{parse_classifier_request, ClassifierRequest, Context, RequestError};
-use laya::QType;
+use rlcd::server::request::{parse_classifier_request, ClassifierRequest, Context, RequestError};
+use rlcd::QType;
 
 fn parse(body: &str) -> Result<ClassifierRequest, Vec<RequestError>> {
     parse_classifier_request(body.as_bytes())

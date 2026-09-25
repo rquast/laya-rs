@@ -1,7 +1,7 @@
 # JEV-007 — Protocol Conformance Test Suite
 
 Scope: `tests/jev_conformance.rs` (integration) + `tests/jev_conformance/`
-fixtures — HTTP-level tests that pin laya-rs to the Jev/Simple-Jev protocol
+fixtures — HTTP-level tests that pin rlcd-rs to the Jev/Simple-Jev protocol
 contract, mirroring simple-jev's own `test_laya.py` (contract) and
 `test_api.py` (validation) suites. This card is the epic's quality gate:
 nothing in the `jev-server` epic is `done` until this suite passes.
@@ -72,7 +72,7 @@ fixture reuses the README's refund example.
 
 - Choice probabilities sum within 0.01 of 1; `confidence` equals the max
   probability; `score` lies in `[0, N-1]`; `noul` in `[0, 1]`.
-- Determinism: identical request twice → identical answers (laya is
+- Determinism: identical request twice → identical answers (rlcd is
   non-autoregressive; no sampling).
 
 ## Pass criteria

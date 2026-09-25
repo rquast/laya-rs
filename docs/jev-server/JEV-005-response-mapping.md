@@ -8,10 +8,10 @@ admission rules" + "Response body" sections.
 
 ## Answer mapping (laya-native semantics)
 
-Input: `Vec<(qid, laya::Answer)>` from `RLAgent::system_one` + the original
+Input: `Vec<(qid, rlcd::Answer)>` from `RLAgent::system_one` + the original
 `Vec<(String, Question)>` + per-question sequence lengths.
 
-| Jev answer | laya-rs source | Transform |
+| Jev answer | rlcd-rs source | Transform |
 | --- | --- | --- |
 | choice: `choice` | `Answer::Choice.choice` | pass through (argmax already computed) |
 | choice: `confidence` | `Answer::Choice.confidence` | pass through (= max candidate prob) |
@@ -23,7 +23,7 @@ Input: `Vec<(qid, laya::Answer)>` from `RLAgent::system_one` + the original
 | noul: `noul` | `Answer::Noul.noul` | pass through — the **native P(true)**, clamped to [0,1] (the reference's laya backend explicitly uses the SDK's native binary probability, NOT the v1 nine-bin 0.01–0.99 mapping) |
 
 **Stripped:** `act_probability` (the laya SDK's action field — the reference
-backend omits it; laya-rs's `answer_to_json` emits it, so the server mapping
+backend omits it; rlcd-rs's `answer_to_json` emits it, so the server mapping
 must not). Implement as a dedicated `answer_to_jev_json(answer, question)`
 rather than post-filtering `answer_to_json` (which also re-sorts maps via
 BTreeMap — the protocol wants request order for choice probabilities).

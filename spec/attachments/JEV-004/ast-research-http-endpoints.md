@@ -41,7 +41,7 @@ Deviations (documented in the feature file): the router adds
 `start_server`/`ServerHandle` lifecycle is JEV-006 (separate card);
 JEV-004 delivers `build_router` + handlers + error envelope only.
 
-## 2. Existing laya-rs server seams (JEV-003/JEV-005 deliverables)
+## 2. Existing rlcd-rs server seams (JEV-003/JEV-005 deliverables)
 
 `src/server/mod.rs` exports:
 - `request::{parse_classifier_request, ClassifierRequest, Context, RequestError, ...}`

@@ -69,6 +69,6 @@ reuse or diverge from.
 - `parse_classifier_request` is pure over `&[u8]` → fully unit-testable,
   weight-free (the `tests/schema.rs` in-memory WordLevel tokenizer pattern is
   NOT needed here — no tokenization at this layer).
-- `laya::Question` is constructible directly in tests (public fields).
+- `rlcd::Question` is constructible directly in tests (public fields).
 - Non-string entry canonicalization is testable by comparing against the
   expected compact sorted-key JSON strings.

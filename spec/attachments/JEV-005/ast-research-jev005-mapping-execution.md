@@ -51,7 +51,7 @@ pub fn system_one(&self, state: &Value, questions: &[(String, Question)])
     request-order guarantee the Jev mapping must preserve into JSON.
   - `Score { score: f32, legend: Vec<String>, probabilities: Vec<f32>, confidence: f32, act_probability: f32 }`
   - `Noul { noul: f32, act_probability: f32 }`
-- `act_probability` is the laya action head — must be STRIPPED by the Jev
+- `act_probability` is the rlcd action head — must be STRIPPED by the Jev
   mapping (protocol: no such field).
 - Callers of `system_one` (grep): src/main.rs (3 CLI paths), src/wasm.rs:91,
   tests. No other production callers → adding the server execution layer does
@@ -62,7 +62,7 @@ pub fn system_one(&self, state: &Value, questions: &[(String, Question)])
   questions: Vec<(String, Question)> in document order }, Vec<RequestError>>`.
 - `Context` (request.rs:67-70): `State(Value)` | `Messages(Vec<ChatMessage>)`.
   JEV-005 needs the state as a JSON `Value` for `system_one`: `State(v)` → `v`;
-  `Messages(m)` → `json!([{role, content}...])` (protocol-reference: the laya
+  `Messages(m)` → `json!([{role, content}...])` (protocol-reference: the rlcd
   backend serializes messages as a JSON list of {role, content} objects).
 - The 256-question schema cap is already enforced here; JEV-005 adds the
   configurable `--max-request-branches` (default 100) 422 on top.

@@ -14,7 +14,7 @@ Generated via AstGrep over `src/main.rs` during reverse ACDD discovery.
   - `Answer { input, output, model, model_variant, only }`
   - `Train { model_dir, dataset, epochs, lr, group_size, sigma, save_to }`
 
-## `laya ask` handler (src/main.rs lines 98–121)
+## `rlcd ask` handler (src/main.rs lines 98–121)
 
 ```
 if let Some(Command::Ask { model, state, question, options }) = &args.command {

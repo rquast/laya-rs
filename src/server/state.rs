@@ -11,7 +11,7 @@
 //! `ServerState` is the `Clone`-over-`Arc` shared state the axum router
 //! (`build_router`, JEV-004) extracts; the `Answerer` trait is the seam that
 //! keeps the whole protocol layer testable without a checkpoint — production
-//! installs [`RealAnswerer`] over the loaded [`laya::RLAgent`], weight-free
+//! installs [`RealAnswerer`] over the loaded [`rlcd::RLAgent`], weight-free
 //! tests inject mocks.
 
 use std::sync::Arc;

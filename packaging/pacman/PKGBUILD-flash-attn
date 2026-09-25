@@ -2,35 +2,35 @@
 #
 # Built by the release workflow, which fills in the version and checksum and
 # publishes the resulting package to apiplant.github.io/pacman. It is not an
-# AUR manifest: the package is named `laya-rs-flash-attn` rather than
-# `laya-rs-flash-attn-bin` and carries no `provides`/`conflicts` pair beyond
-# the one against `laya-rs` below.
-pkgname=laya-rs-flash-attn
+# AUR manifest: the package is named `rlcd-rs-flash-attn` rather than
+# `rlcd-rs-flash-attn-bin` and carries no `provides`/`conflicts` pair beyond
+# the one against `rlcd-rs` below.
+pkgname=rlcd-rs-flash-attn
 pkgver=@VERSION@
 pkgrel=1
 pkgdesc="Rust (candle) inference for Laya's typed-decision engine (CUDA + flash-attn build)"
 arch=('x86_64')
-url="https://github.com/apiplant/laya-rs"
+url="https://github.com/apiplant/rlcd-rs"
 license=('Apache-2.0')
 # nvidia-utils ships libcuda.so.1, the driver-side runtime library this build
 # links against. It does not pull in a matching toolkit version; the host
 # driver still needs to support the CUDA release this was built against (see
 # packaging/README.md).
 depends=('nvidia-utils')
-provides=('laya-rs')
-conflicts=('laya-rs')
-# The release archive holding the `laya` binary and the README. The workflow
+provides=('rlcd-rs')
+conflicts=('rlcd-rs')
+# The release archive holding the `rlcd` binary and the README. The workflow
 # builds the package before the release exists and drops the archive next to
 # this file, which makepkg picks up instead of downloading; the URL is what
 # makes the PKGBUILD work on its own once the release is published.
-source=("$pkgname-$pkgver-x86_64.tar.gz::$url/releases/download/v$pkgver/laya-rs-flash-attn-v$pkgver-x86_64-unknown-linux-gnu.tar.gz")
+source=("$pkgname-$pkgver-x86_64.tar.gz::$url/releases/download/v$pkgver/rlcd-rs-flash-attn-v$pkgver-x86_64-unknown-linux-gnu.tar.gz")
 sha256sums=('@SHA_LINUX_X86_64_FLASH_ATTN@')
 # The release profile already strips symbols, and makepkg's strip pass on an
 # LTO'd binary buys nothing.
 options=('!strip' '!debug')
 
 package() {
-  local src="$srcdir/laya-rs-flash-attn-v$pkgver-x86_64-unknown-linux-gnu"
-  install -Dm755 "$src/laya" "$pkgdir/usr/bin/laya"
+  local src="$srcdir/rlcd-rs-flash-attn-v$pkgver-x86_64-unknown-linux-gnu"
+  install -Dm755 "$src/rlcd" "$pkgdir/usr/bin/rlcd"
   install -Dm644 "$src/README.md" "$pkgdir/usr/share/doc/$pkgname/README.md"
 }

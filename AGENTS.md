@@ -1,14 +1,14 @@
-# Agent Development Guidelines for laya-rs
+# Agent Development Guidelines for rlcd-rs
 
-This document provides guidelines for AI assistants working on the **laya-rs codebase**. This is about DEVELOPING laya-rs itself, not using it.
+This document provides guidelines for AI assistants working on the **rlcd-rs codebase**. This is about DEVELOPING rlcd-rs itself, not using it.
 
 ---
 
 ## Project Overview
 
-**laya-rs** is a pure-Rust (candle) reimplementation of Laya, the sub-35ms non-autoregressive "System 1" decision engine. It serves typed-decision questions (choice/score/noul) over the Jev protocol — as a CLI, a tokio/axum HTTP server, a wasm browser agent, and a training loop (RLCD: REINFORCE with Gaussian exploration and a group-mean baseline).
+**rlcd-rs** is a pure-Rust (candle) reimplementation of Laya, the sub-35ms non-autoregressive "System 1" decision engine. It serves typed-decision questions (choice/score/noul) over the Jev protocol — as a CLI, a tokio/axum HTTP server, a wasm browser agent, and a training loop (RLCD: REINFORCE with Gaussian exploration and a group-mean baseline).
 
-- **Repository**: https://github.com/apiplant/laya-rs
+- **Repository**: https://github.com/apiplant/rlcd-rs
 - **License**: Apache-2.0
 - **Language**: Rust (single crate at the repo root; `src/` + `tests/`)
 
@@ -112,7 +112,7 @@ deliberately lightweight (no tracing dependency); do not add one.
 
 ### Crate layout
 
-- Single crate: `laya-rs` (lib name `laya`), crate types `rlib` + `cdylib`
+- Single crate: `rlcd-rs` (lib name `rlcd`), crate types `rlib` + `cdylib`
 - Native-only modules are `#[cfg(not(target_arch = "wasm32"))]`-gated
   (`download`, `server`, …) — the wasm build must never link C-dependent
   or native-only deps. `tests/wasm_compile.rs` guards this.
@@ -151,13 +151,13 @@ deliberately lightweight (no tracing dependency); do not add one.
 Weight-dependent tests gate on env vars and **skip silently** when unset
 (the repo convention):
 
-- `LAYA_TEST_MODEL` — a checkpoint **directory** (e.g. `~/.cache/laya-rs/laya-typed-decisions/`); gated tests return early without it
-- `LAYA_TEST_BINARY` — path to a prebuilt `laya` binary for CLI tests
-- `LAYA_TEST_DOWNLOAD` — gates real download tests
-- `LAYA_OFFLINE` — forces offline mode
+- `LAYA_TEST_MODEL` — a checkpoint **directory** (e.g. `~/.cache/rlcd-rs/laya-typed-decisions/`); gated tests return early without it
+- `RLCD_TEST_BINARY` — path to a prebuilt `rlcd` binary for CLI tests
+- `RLCD_TEST_DOWNLOAD` — gates real download tests
+- `RLCD_OFFLINE` — forces offline mode
 
 Do not download checkpoints inside tests beyond the existing gated
-patterns; a real checkpoint (~842 MB) lives in `~/.cache/laya-rs/` on
+patterns; a real checkpoint (~842 MB) lives in `~/.cache/rlcd-rs/` on
 this machine.
 
 ### @step comments (fspec ACDD)

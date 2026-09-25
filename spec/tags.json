@@ -21,7 +21,7 @@
         },
         {
           "name": "@jev-server",
-          "description": "JEV Protocol HTTP Server bounded context (laya-rs axum server speaking the open Jev/Simple-Jev classifier protocol)"
+          "description": "JEV Protocol HTTP Server bounded context (rlcd-rs axum server speaking the open Jev/Simple-Jev classifier protocol)"
         },
         {
           "name": "@language-routing",

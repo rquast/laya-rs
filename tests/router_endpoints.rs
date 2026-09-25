@@ -21,9 +21,9 @@ use axum::http::Method;
 use axum::http::Request;
 use axum::http::StatusCode;
 use axum::Router;
-use laya::schema::Question;
-use laya::server::state::{Answerer, ServerConfig, ServerState};
-use laya::Answer;
+use rlcd::schema::Question;
+use rlcd::server::state::{Answerer, ServerConfig, ServerState};
+use rlcd::Answer;
 use serde_json::json;
 use serde_json::Value;
 use tower::ServiceExt;
@@ -53,7 +53,7 @@ impl Answerer for MockAnswerer {
         _state: &serde_json::Value,
         _questions: &[(String, Question)],
         cap: usize,
-    ) -> Result<Vec<usize>, laya::server::state::AdmissionError> {
+    ) -> Result<Vec<usize>, rlcd::server::state::AdmissionError> {
         Ok(vec![16.min(cap)])
     }
 
@@ -75,7 +75,7 @@ impl Answerer for MockAnswerer {
 
 fn server_with(mock: Arc<MockAnswerer>) -> Router {
     let state = ServerState::new(mock, MODEL, ServerConfig::default());
-    laya::server::router::build_router(state)
+    rlcd::server::router::build_router(state)
 }
 
 /// One request against the router via `Router::oneshot` (no sockets).

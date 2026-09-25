@@ -4,8 +4,8 @@
  * This test file validates the acceptance criteria defined in the feature file.
  * Scenarios map directly to Gherkin scenarios.
  *
- * The `laya` binary is located via CARGO_BIN_EXE_laya (cargo sets it for
- * integration tests) or LAYA_TEST_BINARY. Both scenarios need a real
+ * The `rlcd` binary is located via CARGO_BIN_EXE_rlcd (cargo sets it for
+ * integration tests) or RLCD_TEST_BINARY. Both scenarios need a real
  * checkpoint (LAYA_TEST_MODEL env var naming a checkpoint directory); without
  * it they are skipped — model weights are not bundled in the repository. The
  * demo path has no `--model` flag; it resolves via `--models-root` (a
@@ -16,9 +16,9 @@
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-fn laya_bin() -> String {
-    std::env::var("LAYA_TEST_BINARY")
-        .unwrap_or_else(|_| env!("CARGO_BIN_EXE_laya").to_string())
+fn rlcd_bin() -> String {
+    std::env::var("RLCD_TEST_BINARY")
+        .unwrap_or_else(|_| env!("CARGO_BIN_EXE_rlcd").to_string())
 }
 
 fn model_dir() -> Option<String> {
@@ -38,7 +38,7 @@ impl FamilyRoot {
             .duration_since(UNIX_EPOCH)
             .expect("time")
             .as_nanos();
-        let root = std::env::temp_dir().join(format!("laya-demo-test-{n}"));
+        let root = std::env::temp_dir().join(format!("rlcd-demo-test-{n}"));
         let variant = root.join("typed-decisions");
         std::fs::create_dir_all(&variant).expect("create family root");
         for entry in std::fs::read_dir(checkpoint).expect("read checkpoint dir") {
@@ -90,11 +90,11 @@ fn demo_battery_prints_one_line_per_question_type() {
     // @step Given a laya checkpoint is available
     let _ = &family.root;
 
-    // @step When the user runs `laya "The server has been down since Tuesday and no one has replied"`
-    let out = Command::new(laya_bin())
+    // @step When the user runs `rlcd "The server has been down since Tuesday and no one has replied"`
+    let out = Command::new(rlcd_bin())
         .args(["--models-root", &family.root, "The server has been down since Tuesday and no one has replied"])
         .output()
-        .expect("failed to run laya");
+        .expect("failed to run rlcd");
 
     // @step Then stdout shows `routed to: <checkpoint> (<dir>)` followed by a `department:` choice line with indented option probabilities, an `urgency:` score line with indented level probabilities, and a `churn_risk:` noul line
     assert!(out.status.success(), "stderr: {}", String::from_utf8_lossy(&out.stderr));
@@ -130,11 +130,11 @@ fn no_arguments_use_the_builtin_default_body() {
     // @step Given a laya checkpoint is available
     let _ = &family.root;
 
-    // @step When the user runs `laya` with no arguments at all
-    let out = Command::new(laya_bin())
+    // @step When the user runs `rlcd` with no arguments at all
+    let out = Command::new(rlcd_bin())
         .args(["--models-root", &family.root])
         .output()
-        .expect("failed to run laya");
+        .expect("failed to run rlcd");
 
     // @step Then the demo runs against the built-in default body and prints the same three answer lines (`department:`, `urgency:`, `churn_risk:`)
     assert!(out.status.success(), "stderr: {}", String::from_utf8_lossy(&out.stderr));

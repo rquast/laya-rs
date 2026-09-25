@@ -18,7 +18,7 @@ Architectural component tags
 |-----|-------------|
 | `@checkpoint-management` | Checkpoint Management bounded context (resolution + download) |
 | `@decision-inference` | Decision Inference bounded context (CLI ask/answer/demo, RLAgent, wasm, schema) |
-| `@jev-server` | JEV Protocol HTTP Server bounded context (laya-rs axum server speaking the open Jev/Simple-Jev classifier protocol) |
+| `@jev-server` | JEV Protocol HTTP Server bounded context (rlcd-rs axum server speaking the open Jev/Simple-Jev classifier protocol) |
 | `@language-routing` | Language Routing bounded context (script detector + whichlang) |
 | `@training-calibration` | Training and Calibration bounded context (RLCD training loop + temperature fitting) |
 

@@ -1,6 +1,6 @@
 //! Laya-native answer mapping + response assembly (JEV-005).
 //!
-//! `answer_to_jev_json` maps a laya [`laya::Answer`] to the Jev/Simple-Jev
+//! `answer_to_jev_json` maps a rlcd [`rlcd::Answer`] to the Jev/Simple-Jev
 //! v1 protocol answer shape (see `docs/jev-server/JEV-005-response-mapping.md`
 //! and `spec/attachments/JEV-005/protocol-reference.md`):
 //!
@@ -8,9 +8,9 @@
 //!   the request's **insertion** order;
 //! - score:  `{type, score, confidence, probabilities "0".."N-1", legend}`;
 //! - noul:   `{type, noul}` — the native P(true), no confidence field;
-//! - the laya `act_probability` action field is **stripped** from every answer.
+//! - the rlcd `act_probability` action field is **stripped** from every answer.
 //!
-//! Deliberately distinct from [`laya::agent::answer_to_json`], which BTreeMap-
+//! Deliberately distinct from [`rlcd::agent::answer_to_json`], which BTreeMap-
 //! sorts its objects (the crate's `serde_json` keeps sorted-key maps by
 //! design — see `Cargo.toml`) and emits `act_probability`. The Jev protocol
 //! wants request order for choice probabilities, so this module serializes
@@ -47,7 +47,7 @@ pub fn answer_to_jev_json(answer: &Answer) -> String {
         Answer::Choice { choice, probabilities, .. } => {
             // Protocol: confidence = the winning candidate's probability
             // (the max over the distribution, argmax ties broken by request
-            // order). The laya `Answer`'s own `confidence` is an internal
+            // order). The rlcd `Answer`'s own `confidence` is an internal
             // entropy-based metric and is NOT the protocol value.
             let confidence = probabilities
                 .iter()
@@ -125,7 +125,7 @@ impl ClassifierResponse {
     }
 }
 
-/// A laya probability/score/noul value as compact JSON text. The values are
+/// A rlcd probability/score/noul value as compact JSON text. The values are
 /// always finite by construction (softmax outputs, expected-index sums, and
 /// clamped native probabilities), so `to_string()` is always valid JSON.
 fn fmt_f32(v: f32) -> String {

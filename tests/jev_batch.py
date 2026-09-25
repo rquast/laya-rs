@@ -6,7 +6,7 @@ Scenarios map directly to Gherkin scenarios.
 
 The driver under test is scripts/jev_batch.py (Python 3, stdlib only). Each
 test invokes it via `python3 <repo>/scripts/jev_batch.py ...` with a stand-in
-`laya` shell-script binary that records its argv to a log file and writes a
+`rlcd` shell-script binary that records its argv to a log file and writes a
 deterministic {qid: answer} JSON file, so per-section behavior is observable
 without checkpoint weights. The binary auto-detection scenario copies the
 driver into a scratch repo layout instead, since the driver resolves its
@@ -29,7 +29,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DRIVER = REPO_ROOT / "scripts" / "jev_batch.py"
 
-# A stand-in for the real `laya` binary: records every invocation (argv) to
+# A stand-in for the real `rlcd` binary: records every invocation (argv) to
 # $FAKE_BINARY_LOG, fails when $FAKE_BINARY_FAIL is set, and otherwise writes
 # a deterministic {qid: answer} JSON file to the section output path.
 # argv: answer <input> <output> --model-dir <dir>
@@ -67,7 +67,7 @@ class Workspace:
     def __init__(self, name):
         self.root = Path(tempfile.mkdtemp(prefix=f"jev-batch-{name}-"))
         self.log = self.root / "invocations.log"
-        self.fake = self.root / "fake_laya"
+        self.fake = self.root / "fake_rlcd"
         self.fake.write_text(FAKE_BINARY)
         self.fake.chmod(0o755)
         atexit.register(shutil.rmtree, self.root, ignore_errors=True)
@@ -85,7 +85,7 @@ class Workspace:
         return subprocess.run(cmd, capture_output=True, text=True, env=self.env(fail=fail))
 
     def invocations(self):
-        """The argv of each `laya answer` call the stand-in binary received (without the leading 'answer')."""
+        """The argv of each `rlcd answer` call the stand-in binary received (without the leading 'answer')."""
         if not self.log.is_file():
             return []
         return [line[len("answer "):] for line in self.log.read_text().splitlines() if line.startswith("answer ")]
@@ -126,7 +126,7 @@ def test_answer_multiple_sections_and_assemble_the_output():
     sections = json.loads(questions.read_text())
     assert set(sections) == {"s1", "s2"}
 
-    # @step When the user runs `scripts/jev_batch.py questions.json answers.json --model-dir /path/to/laya-typed-decisions` and each section's `laya answer` succeeds
+    # @step When the user runs `scripts/jev_batch.py questions.json answers.json --model-dir /path/to/laya-typed-decisions` and each section's `rlcd answer` succeeds
     out = ws.run_driver(questions, answers, "--model-dir", "/path/to/laya-typed-decisions")
     assert out.returncode == 0, f"driver failed: {out.stderr}"
 
@@ -137,7 +137,7 @@ def test_answer_multiple_sections_and_assemble_the_output():
     assert set(parsed) == {"s1", "s2"}, f"assembled sections: {sorted(parsed)}"
     assert parsed["s1"]["department"]["type"] == "choice"
     assert parsed["s2"]["churn_risk"]["type"] == "noul"
-    # one `laya answer` call per section, input-file order; pretty, keys sorted (s1 before s2)
+    # one `rlcd answer` call per section, input-file order; pretty, keys sorted (s1 before s2)
     assert len(ws.invocations()) == 2
     assert text.index('"s1"') < text.index('"s2"')
     assert '\n  "s1"' in text  # pretty-printed (indent 2)
@@ -156,7 +156,7 @@ def test_top_level_value_that_is_not_an_object_is_rejected():
     # @step When the user runs the driver with that file
     out = ws.run_driver(bad, answers)
 
-    # @step Then the driver exits with the error `expected top-level object of {section: {state, questions}}` and no `laya answer` call is made for any section
+    # @step Then the driver exits with the error `expected top-level object of {section: {state, questions}}` and no `rlcd answer` call is made for any section
     assert out.returncode != 0
     assert "expected top-level object of {section: {state, questions}}" in out.stderr, f"stderr: {out.stderr}"
     assert not answers.exists(), "answers file must not be written"
@@ -200,7 +200,7 @@ def test_only_skips_sections_left_with_no_matching_questions():
     out = ws.run_driver(questions, answers, "--only", "churn_risk")
     assert out.returncode == 0, f"driver failed: {out.stderr}"
 
-    # @step Then s1 is skipped entirely (no `laya answer` call for it) and answers.json contains only the s2 entry with the churn_risk answer
+    # @step Then s1 is skipped entirely (no `rlcd answer` call for it) and answers.json contains only the s2 entry with the churn_risk answer
     parsed = json.loads(answers.read_text())
     assert set(parsed) == {"s2"}, f"expected only s2, got {sorted(parsed)}"
     assert parsed["s2"]["churn_risk"]["type"] == "noul"
@@ -216,7 +216,7 @@ def test_a_failing_section_aborts_the_run_without_writing_output():
     questions.write_text(two_section_questions())
     answers = ws.root / "answers.json"
 
-    # @step Given the first section's `laya answer` invocation exits non-zero (for example, the checkpoint cannot be loaded)
+    # @step Given the first section's `rlcd answer` invocation exits non-zero (for example, the checkpoint cannot be loaded)
     questions  # input is valid; the stand-in binary is configured to fail
 
     # @step When the user runs the driver with that file
@@ -227,11 +227,11 @@ def test_a_failing_section_aborts_the_run_without_writing_output():
     assert not answers.exists(), "answers file must not be written"
 
 
-# Scenario: The built laya binary is auto-detected before PATH
-def test_the_built_laya_binary_is_auto_detected_before_path():
+# Scenario: The built rlcd binary is auto-detected before PATH
+def test_the_built_rlcd_binary_is_auto_detected_before_path():
     ws = Workspace("autodetect")
 
-    # @step Given a built laya binary exists under the repository's target/ (release or debug), `laya` is not on PATH, and no `--binary` flag is given
+    # @step Given a built rlcd binary exists under the repository's target/ (release or debug), `rlcd` is not on PATH, and no `--binary` flag is given
     # Scratch repo layout: the driver's built-binary candidates are resolved
     # relative to its own location (scripts/..), so copy it in and plant a
     # built binary under target/debug/.
@@ -240,13 +240,13 @@ def test_the_built_laya_binary_is_auto_detected_before_path():
     (repo / "scripts").mkdir()
     shutil.copy(DRIVER, repo / "scripts" / "jev_batch.py")
     (repo / "target" / "debug").mkdir(parents=True)
-    built = repo / "target" / "debug" / "laya"
+    built = repo / "target" / "debug" / "rlcd"
     built.write_text(FAKE_BINARY)
     built.chmod(0o755)
-    # A `laya` on PATH that would be used if auto-detection fell back to PATH.
+    # A `rlcd` on PATH that would be used if auto-detection fell back to PATH.
     pathdir = repo / "pathbin"
     pathdir.mkdir()
-    shim = pathdir / "laya"
+    shim = pathdir / "rlcd"
     shim.write_text('#!/bin/sh\necho "shim-called $@" >> "%s"\n' % (ws.root / "path-shim.log"))
     shim.chmod(0o755)
 
@@ -254,16 +254,16 @@ def test_the_built_laya_binary_is_auto_detected_before_path():
     questions.write_text(two_section_questions())
     answers = repo / "answers.json"
 
-    # @step When the user runs the driver from a checkout whose target/ holds a built laya binary
+    # @step When the user runs the driver from a checkout whose target/ holds a built rlcd binary
     env = ws.env()
     env["PATH"] = f"{pathdir}{os.pathsep}{env['PATH']}"
     cmd = [sys.executable, str(repo / "scripts" / "jev_batch.py"), str(questions), str(answers), "--model-dir", "/path/to/laya-typed-decisions"]
     out = subprocess.run(cmd, capture_output=True, text=True, env=env)
     assert out.returncode == 0, f"driver failed: {out.stderr}"
 
-    # @step Then the driver invokes the built binary under target/ (the `laya` on PATH is never used) and the run proceeds to answer the sections with it
+    # @step Then the driver invokes the built binary under target/ (the `rlcd` on PATH is never used) and the run proceeds to answer the sections with it
     assert len(ws.invocations()) == 2, "both sections must be answered by the built binary"
-    assert not (ws.root / "path-shim.log").exists(), "the `laya` on PATH must never be used"
+    assert not (ws.root / "path-shim.log").exists(), "the `rlcd` on PATH must never be used"
     assert json.loads(answers.read_text()) and set(json.loads(answers.read_text())) == {"s1", "s2"}
 
 
@@ -274,14 +274,14 @@ def test_the_driver_forwards_its_checkpoint_flag_to_every_section_call():
     questions.write_text(two_section_questions())
     answers = ws.root / "answers.json"
 
-    # @step Given a stand-in laya binary records the full argument list of each `laya answer` invocation it receives, and a valid multi-section questions file exists
+    # @step Given a stand-in rlcd binary records the full argument list of each `rlcd answer` invocation it receives, and a valid multi-section questions file exists
     assert ws.fake.is_file() and set(json.loads(questions.read_text())) == {"s1", "s2"}
 
     # @step When the user runs the driver with `--model-dir /path/to/laya-typed-decisions` against that file
     out = ws.run_driver(questions, answers, "--model-dir", "/path/to/laya-typed-decisions")
     assert out.returncode == 0, f"driver failed: {out.stderr}"
 
-    # @step Then each recorded `laya answer` invocation carries the `--model-dir /path/to/laya-typed-decisions` argument (the as-built flag contract — see the architecture notes for how it mismatches the current binary's --model)
+    # @step Then each recorded `rlcd answer` invocation carries the `--model-dir /path/to/laya-typed-decisions` argument (the as-built flag contract — see the architecture notes for how it mismatches the current binary's --model)
     calls = ws.invocations()
     assert len(calls) == 2, f"one invocation per section: {calls}"
     for call in calls:

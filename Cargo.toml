@@ -1,21 +1,21 @@
 [package]
-name = "laya-rs"
+name = "rlcd-rs"
 version = "0.3.0"
 edition = "2021"
-default-run = "laya"
+default-run = "rlcd"
 description = "Rust (candle) inference for Laya's typed-decision (choice/score/noul) decision engine"
 license = "Apache-2.0"
-repository = "https://github.com/apiplant/laya-rs"
+repository = "https://github.com/apiplant/rlcd-rs"
 readme = "README.md"
 keywords = ["laya", "candle", "inference", "nlp", "rl"]
 categories = ["science", "text-processing", "command-line-utilities"]
 
 [[bin]]
-name = "laya"
+name = "rlcd"
 path = "src/main.rs"
 
 [lib]
-name = "laya"
+name = "rlcd"
 path = "src/lib.rs"
 crate-type = ["rlib", "cdylib"]
 
@@ -74,14 +74,14 @@ tokenizers = { version = "0.20", default-features = false, features = ["unstable
 # table (~1MB) for its 16 languages, which is all the router needs since it
 # only ever calls this on text that's already dominant-Latin-script.
 whichlang = "0.1"
-# Checkpoint downloads (see `download`). The browser demo fetches with the
-# JS `fetch` API instead (website/src/lib/laya.ts), so this is native-only.
+# Checkpoint downloads (see `download`). Native-only — the cdylib is
+# consumed by browser demos that fetch with the JS `fetch` API instead.
 ureq = "2"
 # Jev protocol server (src/server/): serial model execution behind a tokio
 # model lock + bounded admission queue, with the synchronous candle forward
 # offloaded to the blocking pool (`spawn_blocking` needs `rt`; `sync` for the
 # async Mutex/Semaphore; `net` for the `start_server` bind path (JEV-006);
-# `signal` for the `laya serve` ctrl-c/SIGTERM shutdown wait (JEV-006)).
+# `signal` for the `rlcd serve` ctrl-c/SIGTERM shutdown wait (JEV-006)).
 # Native-only, like the server module itself.
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "sync", "net", "signal"] }
 # HTTP endpoints (src/server/router.rs, JEV-004): axum 0.8 router +

@@ -63,10 +63,10 @@ fn main() -> anyhow::Result<()> {
     let sin2 = cos2.clone();
     let mut fused_total = 0.0;
     fused_total += bench("  rope fused (q+k)", &dev, 28.0, || {
-        laya::fused::rope(&qh, &cos2, &sin2)?;
-        laya::fused::rope(&qh, &cos2, &sin2)?;
+        rlcd::fused::rope(&qh, &cos2, &sin2)?;
+        rlcd::fused::rope(&qh, &cos2, &sin2)?;
         Ok(()) })?;
-    fused_total += bench("  geglu fused", &dev, 28.0, || { laya::fused::geglu(&qkv_big)?; Ok(()) })?;
+    fused_total += bench("  geglu fused", &dev, 28.0, || { rlcd::fused::geglu(&qkv_big)?; Ok(()) })?;
     println!("{:<28} {:>28} {fused_total:7.2} ms  (was {:.2} ms)", "  subtotal", "", 22.79 + 15.53);
     Ok(())
 }

@@ -44,8 +44,8 @@ protocol surface without duplicating JEV-003/004/005 unit coverage.
 - `pub async fn start_server(host, port, answerer, model_name, config) -> anyhow::Result<ServerHandle>` —
   binds (port 0 = ephemeral), runs `axum::serve` with graceful shutdown.
 - `pub struct ServerHandle { pub port: u16, pub model_name: String, ... }` with `async fn stop(self)`.
-- Model-gated tests load a real `RLAgent` (`laya::RLAgent::load(dir)`), wrap it
-  in `Arc`, build `laya::server::RealAnswerer::new(agent)` (`src/server/state.rs:220`,
+- Model-gated tests load a real `RLAgent` (`rlcd::RLAgent::load(dir)`), wrap it
+  in `Arc`, build `rlcd::server::RealAnswerer::new(agent)` (`src/server/state.rs:220`,
   `pub struct RealAnswerer { agent: Arc<RLAgent> }`), then `start_server("127.0.0.1", 0, ...)`.
   HTTP client: bare `TcpStream` round-trip (the `http()` helper in
   `tests/serve_cli.rs:126`) — dev-deps carry no HTTP client crate.

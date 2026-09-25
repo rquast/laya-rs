@@ -147,7 +147,7 @@ const OPENAPI: &str = r##"{
               "required": ["role", "content"],
               "additionalProperties": false
             },
-            "description": "Text-only chat history (laya-rs rejects image/audio/tool-call content and extra fields)."
+            "description": "Text-only chat history (rlcd-rs rejects image/audio/tool-call content and extra fields)."
           },
           "questions": {
             "type": "object",

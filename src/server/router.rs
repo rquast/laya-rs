@@ -13,7 +13,7 @@
 //! envelope (docs/jev-server/JEV-004-http-endpoints.md pipeline step 1).
 //!
 //! The `start_server`/`ServerHandle` lifecycle (graceful shutdown, the
-//! `laya serve` CLI wiring) is JEV-006; this module is the pure router
+//! `rlcd serve` CLI wiring) is JEV-006; this module is the pure router
 //! factory so the endpoint tests can drive it via `Router::oneshot`.
 
 use axum::extract::DefaultBodyLimit;

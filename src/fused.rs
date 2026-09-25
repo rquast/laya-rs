@@ -87,7 +87,7 @@ fn ptx() -> &'static str {
 
         let opts = CompileOptions { include_paths, use_fast_math: Some(true), ..Default::default() };
         compile_ptx_with_opts(KERNELS, opts)
-            .expect("compiling laya fused kernels")
+            .expect("compiling rlcd fused kernels")
             .to_src()
     })
 }
@@ -97,11 +97,11 @@ struct RopeOp;
 
 impl candle_core::CustomOp3 for RopeOp {
     fn name(&self) -> &'static str {
-        "laya-rope"
+        "rlcd-rope"
     }
 
     fn cpu_fwd(&self, _: &CpuStorage, _: &Layout, _: &CpuStorage, _: &Layout, _: &CpuStorage, _: &Layout) -> Result<(CpuStorage, Shape)> {
-        candle_core::bail!("laya-rope: cuda only")
+        candle_core::bail!("rlcd-rope: cuda only")
     }
 
     #[cfg(not(feature = "cuda"))]
@@ -111,7 +111,7 @@ impl candle_core::CustomOp3 for RopeOp {
         _cos: &CudaStorage, _cl: &Layout,
         _sin: &CudaStorage, _sl: &Layout,
     ) -> Result<(CudaStorage, Shape)> {
-        candle_core::bail!("laya-rope: built without the `cuda` feature")
+        candle_core::bail!("rlcd-rope: built without the `cuda` feature")
     }
 
     #[cfg(feature = "cuda")]
@@ -129,7 +129,7 @@ impl candle_core::CustomOp3 for RopeOp {
         let sin = sin.as_cuda_slice::<half::f16>()?;
         let out = unsafe { dev.alloc::<half::f16>(n) }?;
 
-        let func = dev.get_or_load_custom_func("rope_f16", "laya_fused", ptx())?;
+        let func = dev.get_or_load_custom_func("rope_f16", "rlcd_fused", ptx())?;
         let cfg = LaunchConfig::for_num_elems(n as u32);
         let (hd, dd, sc) = ((h * d) as i32, d as i32, s as i32);
         let n_i = n as i32;
@@ -157,16 +157,16 @@ struct GegluOp;
 
 impl candle_core::CustomOp1 for GegluOp {
     fn name(&self) -> &'static str {
-        "laya-geglu"
+        "rlcd-geglu"
     }
 
     fn cpu_fwd(&self, _: &CpuStorage, _: &Layout) -> Result<(CpuStorage, Shape)> {
-        candle_core::bail!("laya-geglu: cuda only")
+        candle_core::bail!("rlcd-geglu: cuda only")
     }
 
     #[cfg(not(feature = "cuda"))]
     fn cuda_fwd(&self, _x: &CudaStorage, _xl: &Layout) -> Result<(CudaStorage, Shape)> {
-        candle_core::bail!("laya-geglu: built without the `cuda` feature")
+        candle_core::bail!("rlcd-geglu: built without the `cuda` feature")
     }
 
     #[cfg(feature = "cuda")]
@@ -180,7 +180,7 @@ impl candle_core::CustomOp1 for GegluOp {
         let x = x.as_cuda_slice::<half::f16>()?.slice(xl.start_offset()..);
         let out = unsafe { dev.alloc::<half::f16>(n) }?;
 
-        let func = dev.get_or_load_custom_func("geglu_f16", "laya_fused", ptx())?;
+        let func = dev.get_or_load_custom_func("geglu_f16", "rlcd_fused", ptx())?;
         let cfg = LaunchConfig::for_num_elems(n as u32);
         let (n_i, inter_i) = (n as i32, inter as i32);
         let mut b = func.builder();

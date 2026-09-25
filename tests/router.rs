@@ -4,12 +4,12 @@
  * This test file validates the acceptance criteria defined in the feature file.
  * Scenarios map directly to Gherkin scenarios.
  *
- * All scenarios are weight-free and deterministic: `laya::route` returns a
+ * All scenarios are weight-free and deterministic: `rlcd::route` returns a
  * `Checkpoint` enum with no I/O. (Native-only API: `route` is gated to
  * `cfg(not(target_arch = "wasm32"))`, and `cargo test` runs native.)
  */
 
-use laya::{route, Checkpoint};
+use rlcd::{route, Checkpoint};
 
 /// Scenario: Ordinary English text routes to the English checkpoint
 #[test]

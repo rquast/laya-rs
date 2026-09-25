@@ -17,10 +17,10 @@
 
 ## Download side (src/download.rs, native-only)
 
-- `cache_dir()` (22): `$XDG_CACHE_HOME` (if absolute) else `$HOME/.cache`, + `/laya-rs`.
+- `cache_dir()` (22): `$XDG_CACHE_HOME` (if absolute) else `$HOME/.cache`, + `/rlcd-rs`.
 - `variant_cache_dir(variant)` (37): cache dir + `hf_repo` basename (e.g. `laya-multilingual`).
 - `REQUIRED_FILES` (18): `rl_agent_config.json`, `encoder/config.json`, `tokenizer/tokenizer.json`, `tokenizer/tokenizer_config.json`, `model.safetensors`.
-- `download_variant` (86): create dir; per file — skip if present; if `LAYA_OFFLINE` set and file missing → `bail!("{file} is missing from {dir} and LAYA_OFFLINE is set; unset it to allow downloading, or pass --model")`; else fetch `https://huggingface.co/{hf_repo}/resolve/main/{file}` → `.part` temp + rename (atomic), error leaves no partial that looks complete.
+- `download_variant` (86): create dir; per file — skip if present; if `RLCD_OFFLINE` set and file missing → `bail!("{file} is missing from {dir} and RLCD_OFFLINE is set; unset it to allow downloading, or pass --model")`; else fetch `https://huggingface.co/{hf_repo}/resolve/main/{file}` → `.part` temp + rename (atomic), error leaves no partial that looks complete.
 
 ## Callers (wiring)
 
@@ -31,4 +31,4 @@
 ## Test plan constraints
 
 - `resolve`/`find` are pure fs+env logic: explicit + family-root + unknown-variant scenarios are fully testable offline.
-- Cache scenarios: `download_variant` consults `XDG_CACHE_HOME` (env) — tests point it at a temp dir via `std::env::set_var` (note: tests in one process share env; use distinct temp dirs per test; cache-complete scenario needs 5 files; LAYA_OFFLINE scenario needs them absent — env mutation must be scoped carefully, e.g. run in separate test binary or set/restore per test).
+- Cache scenarios: `download_variant` consults `XDG_CACHE_HOME` (env) — tests point it at a temp dir via `std::env::set_var` (note: tests in one process share env; use distinct temp dirs per test; cache-complete scenario needs 5 files; RLCD_OFFLINE scenario needs them absent — env mutation must be scoped carefully, e.g. run in separate test binary or set/restore per test).

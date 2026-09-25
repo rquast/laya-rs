@@ -20,7 +20,7 @@ Discovery-phase code research for `spec/features/wasm-browser-agent.feature`
 - `RLAgent::system_one` — src/agent.rs:126
 - `answer_to_json` — src/agent.rs:211 (JSON shape asserted in tests/agent.rs)
 - `raw_question_to_question` — src/batching.rs:73 (schema tests)
-- empty-batch guard — identical pattern in `laya answer` (src/main.rs, `ensure!(!questions.is_empty(), "no questions to answer")`), pinned by tests/cli_answer.rs
+- empty-batch guard — identical pattern in `rlcd answer` (src/main.rs, `ensure!(!questions.is_empty(), "no questions to answer")`), pinned by tests/cli_answer.rs
 
 ## Build wiring (the criterion this feature now verifies)
 
@@ -31,17 +31,17 @@ Discovery-phase code research for `spec/features/wasm-browser-agent.feature`
 - wasm32-only deps (Cargo.toml `[target.'cfg(target_arch = "wasm32")'.dependencies]`):
   wasm-bindgen 0.2, js-sys, serde-wasm-bindgen, console_error_panic_hook,
   getrandom(js), getrandom 0.3 (wasm_js)
-- Consumer: `website/src/lib/laya.ts` fetches the five checkpoint files from HF
+- Consumer: browser JS fetches the five checkpoint files from HF
   and calls `WasmAgent.load`/`ask`; the shipped artifact
-  `website/src/wasm-pkg/` (wasm-bindgen `--target web` output) exposes
+   (wasm-bindgen `--target web` output) exposes
   `wasmagent_load [i32 x10] -> [i32, i32, i32]` and
   `wasmagent_ask [i32 x5] -> [i32 x4]` (verified via wasmtime ABI probe)
 
 ## Decision (product): no wasm VM in the test path
 
-The wasmtime harness (reimplementing the module's 28 `./laya_bg.js` imports)
+The wasmtime harness (reimplementing the module's 28 `./rlcd_bg.js` imports)
 was dropped as disproportionate: the only wasm-specific, cheap, high-value
 check is that the lib compiles for wasm32-unknown-unknown with no C-linked
 tokenizer backend — now pinned by `tests/wasm_compile.rs`
 (`cargo build --target wasm32-unknown-unknown --lib` + `cargo tree` onig check).
-Runtime load/ask behavior is exercised by the browser demo (website).
+Runtime load/ask behavior is exercised by browser consumers of the cdylib.
